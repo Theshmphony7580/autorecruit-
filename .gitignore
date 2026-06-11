@@ -2,3 +2,12 @@
 
 01_candidates_schemea.md
 *.csv
+
+*.md
+
+.claude
+
+resources_provided_by_the_hackthon/
+
+.agents
+*.pdf
