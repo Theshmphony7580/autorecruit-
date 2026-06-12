@@ -11,3 +11,6 @@ resources_provided_by_the_hackthon/
 
 .agents
 *.pdf
+
+.vscode
+
