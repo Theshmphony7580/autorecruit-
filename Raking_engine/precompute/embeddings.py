@@ -34,7 +34,7 @@ from tqdm import tqdm
 def generate_embeddings(candidates_path: str, output_path: str):
     """Generate and save embeddings for all candidates."""
     print("Loading AI Model into memory (this may take 10-30 seconds, please don't press Ctrl+C)...")
-    model = SentenceTransformer('all-MiniLM-L6-v2')
+    model = SentenceTransformer('BAAI/bge-small-en-v1.5')
     
     texts = []
     ids = []
@@ -66,7 +66,7 @@ def generate_embeddings(candidates_path: str, output_path: str):
 
 def generate_jd_embedding(jd_text: str):
     """Generate normalized embedding for JD."""
-    model = SentenceTransformer('all-MiniLM-L6-v2')
+    model = SentenceTransformer('BAAI/bge-small-en-v1.5')
     embedding = model.encode([jd_text], normalize_embeddings=True)
     return embedding[0]
 

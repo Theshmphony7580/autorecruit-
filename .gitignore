@@ -15,3 +15,5 @@ resources_provided_by_the_hackthon/
 .vscode
 
 *.pyc
+*.npy
+data_forensic _files/
