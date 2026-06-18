@@ -6,12 +6,14 @@ class TopKTracker:
         self.heap = []
     
     def push(self, candidate_id: str, score: float, candidate_data: dict):
-        entry = (-score, candidate_id, candidate_data)
+        # Push positive score so the smallest score is at the root of the min-heap
+        entry = (score, candidate_id, candidate_data)
         
         if len(self.heap) < self.k:
             heapq.heappush(self.heap, entry)
-        elif score > -self.heap[0][0]:
+        elif score > self.heap[0][0]:
             heapq.heapreplace(self.heap, entry)
             
     def get_ranked(self) -> list:
-        return sorted(self.heap, key=lambda x: -x[0])
+        # Sort descending to return highest scores first
+        return sorted(self.heap, key=lambda x: x[0], reverse=True)

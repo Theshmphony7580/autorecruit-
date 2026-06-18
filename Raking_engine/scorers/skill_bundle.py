@@ -9,7 +9,7 @@ class BundleScorer:
         if not isinstance(raw_skills, list):
             return 0.0
 
-        candidate_skills_lower = {s.lower().strip() for s in raw_skills}
+        candidate_skills_lower = {s['name'].lower().strip() for s in raw_skills if isinstance(s, dict) and 'name' in s}
 
         bundle_matches = 0
         for bundle in JD_RELEVANT_BUNDLES:

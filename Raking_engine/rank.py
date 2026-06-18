@@ -86,8 +86,7 @@ def main():
     reason_gen = ReasoningGenerator(behavior_df)
     
     results = []
-    for rank, (score_neg, cid, candidate) in enumerate(ranked, 1):
-        score = -score_neg
+    for rank, (score, cid, candidate) in enumerate(ranked, 1):
         reasoning = reason_gen.generate(candidate, score)
         results.append({
             'candidate_id': cid,

@@ -14,7 +14,7 @@ class JDFitScorer:
         raw_skills = candidate.get('skills', [])
         if not isinstance(raw_skills, list):
             raw_skills = []
-        candidate_skills_lower = {s.lower().strip() for s in raw_skills}
+        candidate_skills_lower = {s['name'].lower().strip() for s in raw_skills if isinstance(s, dict) and 'name' in s}
 
         overlap_count = len(candidate_skills_lower & JD_CORE_SKILLS)
         skill_overlap = overlap_count / max(len(JD_CORE_SKILLS), 1)

@@ -9,7 +9,7 @@ class JDSkillFilter:
         if not isinstance(raw_skills, list):
             raw_skills = []
             
-        candidate_skills = {s.lower().strip() for s in raw_skills}
+        candidate_skills = {s['name'].lower().strip() for s in raw_skills if isinstance(s, dict) and 'name' in s}
         
         if candidate_skills & JD_CORE_SKILLS:
             return True

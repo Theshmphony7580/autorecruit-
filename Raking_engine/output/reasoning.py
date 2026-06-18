@@ -15,8 +15,9 @@ class ReasoningGenerator:
         jd_relevant = {'langchain', 'faiss', 'pinecone', 'weaviate', 'embeddings',
                        'vector search', 'semantic search', 'rag', 'llms', 
                        'hugging face', 'sentence transformers', 'recommendation systems'}
-                       
-        relevant_skills = [s for s in skills if s.lower() in jd_relevant][:3]
+        skills = candidate.get('skills', [])
+        if not isinstance(skills, list): skills = []
+        relevant_skills = [s['name'] for s in skills if isinstance(s, dict) and 'name' in s and s['name'].lower() in jd_relevant][:3]
         
         recent_desc = ""
         if career:

@@ -19,7 +19,7 @@ def compute_stuffer_penalty(candidate: dict) -> float:
     raw_skills = candidate.get('skills', [])
     if not isinstance(raw_skills, list):
         raw_skills = []
-    candidate_skills = {s.lower().strip() for s in raw_skills}
+    candidate_skills = {s['name'].lower().strip() for s in raw_skills if isinstance(s, dict) and 'name' in s}
     ml_skill_count = len(candidate_skills & JD_CORE_SKILLS)
     
     if ml_skill_count == 0:
