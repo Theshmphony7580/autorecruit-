@@ -1,7 +1,7 @@
 import os
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config.constants import WEIGHTS, TRUST_MULTIPLIERS, HONEYPOT_PENALTY_MAX
+from config.constants import WEIGHTS
 from utils.normalize import normalize_experience
 
 class CompositeScorer:
@@ -35,19 +35,5 @@ class CompositeScorer:
             experience * WEIGHTS['experience']
         )
         
-        label = 'trusted'
-        if candidate_id in self.behavior_df.index:
-            lbl = self.behavior_df.loc[candidate_id, 'honey_pot_labels']
-            if isinstance(lbl, str):
-                label = lbl
-                
-        trust_mult = TRUST_MULTIPLIERS.get(label, 1.0)
-        
-        honeypot_penalty = 0.0
-        if candidate_id in self.behavior_df.index:
-            hp_raw = self.behavior_df.loc[candidate_id, 'honeypot_score']
-            if isinstance(hp_raw, (int, float)) and hp_raw == hp_raw:
-                honeypot_penalty = min(HONEYPOT_PENALTY_MAX, hp_raw / 10.0)
-                
-        final = (base * trust_mult) - honeypot_penalty - (stuffer_penalty * 0.15)
+        final = base - (stuffer_penalty * 0.15)
         return max(0.0, final)

@@ -1,6 +1,12 @@
+import os
+import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from config.constants import JD_CORE_SKILLS
+
 class ReasoningGenerator:
     def __init__(self, behavior_df):
         self.behavior_df = behavior_df
+        self._jd_skills_lower = {s.lower() for s in JD_CORE_SKILLS}
         
     def generate(self, candidate: dict, score: float) -> str:
         profile = candidate.get('profile', {})
@@ -12,12 +18,8 @@ class ReasoningGenerator:
         current_title = profile.get('current_title', 'Engineer')
         years = profile.get('years_of_experience', 0)
         
-        jd_relevant = {'langchain', 'faiss', 'pinecone', 'weaviate', 'embeddings',
-                       'vector search', 'semantic search', 'rag', 'llms', 
-                       'hugging face', 'sentence transformers', 'recommendation systems'}
-        skills = candidate.get('skills', [])
         if not isinstance(skills, list): skills = []
-        relevant_skills = [s['name'] for s in skills if isinstance(s, dict) and 'name' in s and s['name'].lower() in jd_relevant][:3]
+        relevant_skills = [s['name'] for s in skills if isinstance(s, dict) and 'name' in s and s['name'].lower() in self._jd_skills_lower][:3]
         
         recent_desc = ""
         if career:

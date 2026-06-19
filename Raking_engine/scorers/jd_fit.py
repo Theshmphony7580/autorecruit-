@@ -1,7 +1,7 @@
 import os
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config.constants import JD_CORE_SKILLS, ML_CAREER_TERMS, JD_FIT_SUB_WEIGHTS
+from config.constants import JD_CORE_SKILLS, ML_CAREER_TERMS, JD_FIT_SUB_WEIGHTS, JD_REALISTIC_SKILL_MAXIMUM
 
 class JDFitScorer:
     def compute(self, candidate: dict, candidate_id: str, jd_sim_df) -> float:
@@ -17,7 +17,7 @@ class JDFitScorer:
         candidate_skills_lower = {s['name'].lower().strip() for s in raw_skills if isinstance(s, dict) and 'name' in s}
 
         overlap_count = len(candidate_skills_lower & JD_CORE_SKILLS)
-        skill_overlap = overlap_count / max(len(JD_CORE_SKILLS), 1)
+        skill_overlap = overlap_count / JD_REALISTIC_SKILL_MAXIMUM
         skill_overlap = min(1.0, skill_overlap)
 
         profile = candidate.get('profile', {})
@@ -29,8 +29,8 @@ class JDFitScorer:
         title_score = 1.0 if has_ml_context else 0.0
 
         jd_fit = (
-            semantic_sim * JD_FIT_SUB_WEIGHTS['skill_overlap'] +
-            skill_overlap * JD_FIT_SUB_WEIGHTS['career_match'] +
+            semantic_sim * JD_FIT_SUB_WEIGHTS['semantic_similarity'] +
+            skill_overlap * JD_FIT_SUB_WEIGHTS['keyword_overlap'] +
             title_score * JD_FIT_SUB_WEIGHTS['title_context']
         )
 

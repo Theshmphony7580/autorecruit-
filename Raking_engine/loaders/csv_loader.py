@@ -9,7 +9,8 @@ def load_behavior_scores(path: str) -> pd.DataFrame:
         path,
         usecols=[
             'candidate_id', 'demand_score', 'behavior_score',
-            'skill_desc_similarity', 'honeypot_score', 'honey_pot_labels'
+            'skill_desc_similarity', 'honeypot_score', 'honey_pot_labels',
+            'date_anomaly'
         ],
         index_col='candidate_id',
         low_memory=False

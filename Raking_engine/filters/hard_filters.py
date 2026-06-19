@@ -18,7 +18,16 @@ class HardFilter:
             return True
             
         date_anomaly = row.get('date_anomaly', False)
-        if str(date_anomaly).lower() == 'true' or date_anomaly is True:
+        is_anomaly = False
+        
+        if isinstance(date_anomaly, bool):
+            is_anomaly = date_anomaly
+        elif isinstance(date_anomaly, str):
+            is_anomaly = date_anomaly.lower() in ('true', '1', 'yes')
+        elif isinstance(date_anomaly, (int, float)):
+            is_anomaly = date_anomaly == 1
+            
+        if is_anomaly:
             return True
             
         return False

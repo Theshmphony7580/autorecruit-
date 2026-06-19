@@ -62,26 +62,18 @@ WEIGHTS = {
 }
 
 JD_FIT_SUB_WEIGHTS = {
-    'skill_overlap': 0.50,
-    'career_match':  0.30,
+    'semantic_similarity': 0.50,
+    'keyword_overlap': 0.30,
     'title_context': 0.20,
 }
 
-# Trust multipliers
-TRUST_MULTIPLIERS = {
-    'trusted': 1.0,
-    'minor_issue': 0.9,
-    'suspicious': 0.7,
-    'high_risk': 0.4,
-}
-
-# Honeypot penalty max
-HONEYPOT_PENALTY_MAX = 0.25
 
 # Experience scoring limits
 JD_EXPERIENCE_MIN = 5   # years
 JD_EXPERIENCE_MAX = 9   # years
 EXPERIENCE_DECAY = 5    # how many years outside the range before score = 0
+
+JD_REALISTIC_SKILL_MAXIMUM = 10
 
 TOP_K = 100
 OUTPUT_COLUMNS = ['candidate_id', 'rank', 'score', 'reasoning']
