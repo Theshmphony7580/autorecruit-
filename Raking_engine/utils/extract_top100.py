@@ -1,13 +1,16 @@
 import pandas as pd
 import json
 import os
+import sys
 
 def extract_top_100_json():
     # Setup paths
-    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    submission_path = os.path.join(project_root, 'Raking_engine', 'submission.csv')
-    candidates_path = os.path.join(project_root, 'data_forensic _files', 'candidates.jsonl')
-    output_path = os.path.join(project_root, 'Raking_engine', 'top_100_candidates.jsonl')
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from config.paths import DEFAULT_CANDIDATES_PATH, DEFAULT_OUTPUT_PATH
+    
+    submission_path = DEFAULT_OUTPUT_PATH
+    candidates_path = DEFAULT_CANDIDATES_PATH
+    output_path = os.path.join(os.path.dirname(DEFAULT_OUTPUT_PATH), 'top_100_candidates.jsonl')
     
     if not os.path.exists(submission_path):
         print(f"Error: Could not find {submission_path}")

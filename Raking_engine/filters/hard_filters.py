@@ -42,18 +42,9 @@ class HardFilter:
         if years < 3.0:
             return True  # Reject juniors/entry-level for a Senior role
             
-        skills = candidate.get('skills', [])
-        if not isinstance(skills, list):
-            skills = []
-            
-        relevant_count = 0
-        for s in skills:
-            if isinstance(s, dict) and 'name' in s:
-                if s['name'].lower().strip() in self._jd_skills_lower:
-                    relevant_count += 1
-                    
-        if relevant_count < 2:
-            return True  # Reject candidates without at least 2 core JD skills
+        # REMOVED: Strict skill-count filter. 
+        # The JD explicitly warns against filtering by AI keywords to find "hidden talent" 
+        # (Tier-5 candidates who built recommendation systems but didn't tag "RAG" or "Pinecone").
             
         # --- NEW: Specific JD Disqualifiers ---
         

@@ -31,17 +31,13 @@ class ReasoningGenerator:
             if not recent_desc and career[0].get('description'):
                 recent_desc = career[0]['description'][:150]
                 
-        behavior_row = self.behavior_df.loc[cid] if cid in self.behavior_df.index else None
-        if behavior_row is not None:
-            response_rate = behavior_row.get('response_rate', 0)
-            saved = behavior_row.get('saved', 0)
-        else:
-            response_rate = 0
-            saved = 0
+        signals = candidate.get('redrob_signals', {})
+        response_rate = signals.get('recruiter_response_rate', 0.0)
+        saved = signals.get('saved_by_recruiters_30d', 0)
             
         parts = []
         if current_company and years > 0:
-            parts.append(f"{current_title} with {years} yrs")
+            parts.append(f"{current_title} at {current_company} with {years} yrs")
         elif years > 0:
             parts.append(f"{current_title} with {years} yrs experience")
             
@@ -50,7 +46,7 @@ class ReasoningGenerator:
             
         if recent_desc:
             clean_desc = recent_desc.split('.')[0]
-            parts.append(f"built {clean_desc.lower()}")
+            parts.append(f"Highlight: {clean_desc}")
             
         if saved >= 5:
             parts.append(f"saved by {int(saved)} recruiters")

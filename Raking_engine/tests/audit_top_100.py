@@ -8,11 +8,12 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config.constants import JD_CORE_SKILLS
 
 def audit_top_100():
-    # Go up 3 levels: tests -> Raking_engine -> autorecruit-
-    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    submission_path = os.path.join(project_root, 'Raking_engine', 'submission.csv')
-    candidates_path = os.path.join(project_root, 'data_forensic _files', 'candidates.jsonl')
-    behavior_path = os.path.join(project_root, 'data_forensic _files', 'candidate_behavior_scores_full.csv')
+    # Setup paths
+    from config.paths import DEFAULT_CANDIDATES_PATH, DEFAULT_BEHAVIOR_CSV, DEFAULT_OUTPUT_PATH
+    
+    submission_path = DEFAULT_OUTPUT_PATH
+    candidates_path = DEFAULT_CANDIDATES_PATH
+    behavior_path = DEFAULT_BEHAVIOR_CSV
     
     # Load submission
     sub_df = pd.read_csv(submission_path)
