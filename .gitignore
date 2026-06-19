@@ -1,19 +1,43 @@
+# Massive Data Files (DO NOT PUSH)
 *.jsonl
+*.jsonl.gz
+*.npy
 
-01_candidates_schemea.md
+# Ignore all CSVs by default (to prevent uploading 500MB intermediate tables)
 *.csv
 
-*.md
+# Exceptions: Force Git to track our essential AI configuration CSVs!
+!Raking_engine/assets/candidate_behavior_scores_full.csv
+!Raking_engine/assets/frequent_skill_bundles.csv
 
-.claude
+# Agent / Brainstorming Scratchpads
+.claude/
+.planning/
+.agents/
+BUG_FIX_*.md
+C1.md
+now-check-*.md
+top_100_raw_audit.md
+extract_pdfs.py
+jd_extracted.txt
+readme_extracted.txt
+submission_spec_extracted.txt
+AI-Ranking-System-Strategy.pdf
+Phase_*.md
+Enterprise_Phase_Plans/
 
-resources_provided_by_the_hackthon/
+Ranking_Engine_Architecture_Report.md
 
-.agents
-*.pdf
 
-.vscode
-
+# Python / System Cache
+__pycache__/
 *.pyc
-*.npy
-data_forensic _files/
+.pytest_cache/
+.vscode/
+.venv/
+venv/
+env/
+.env
+
+# Hackathon Rule PDFs (already given to everyone, no need to push)
+resources_provided_by_the_hackthon/

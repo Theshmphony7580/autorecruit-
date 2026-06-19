@@ -14,7 +14,25 @@ JD_CORE_SKILLS = {
     'llms', 'machine learning', 'ml', 'nlp', 'recommendation systems',
 }
 
-# Non-ML Titles (likely keyword stuffers)
+# Specific Disqualifiers defined by the Job Description Policies
+JD_DISQUALIFIED_TITLES = [
+    'marketing', 'project manager', 'product manager', 
+    'hr', 'recruiter', 'sales', 'accountant', 'designer'
+]
+
+JD_DISQUALIFIED_DOMAINS = [
+    'computer vision', 'robotics', 'speech', 'hardware'
+]
+
+JD_ACCEPTED_LOCATIONS = [
+    'pune', 'noida', 'delhi', 'ncr', 'mumbai', 'hyderabad', 'new delhi'
+]
+
+JD_CONSULTING_FIRMS = [
+    'tcs', 'infosys', 'wipro', 'accenture', 'cognizant', 'capgemini', 'tata consultancy'
+]
+
+# Non-ML Titles (penalized for keyword stuffing, but not hard-banned)
 NON_ML_TITLES = {
     'marketing manager', 'sales executive', 'hr manager', 'accountant',
     'content writer', 'graphic designer', 'customer support', 'mechanical engineer',

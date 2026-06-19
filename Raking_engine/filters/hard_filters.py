@@ -1,7 +1,14 @@
 import os
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config.constants import JD_CORE_SKILLS
+
+from config.constants import (
+    JD_CORE_SKILLS, 
+    JD_DISQUALIFIED_TITLES, 
+    JD_DISQUALIFIED_DOMAINS, 
+    JD_ACCEPTED_LOCATIONS, 
+    JD_CONSULTING_FIRMS
+)
 
 class HardFilter:
     def __init__(self, behavior_df):
@@ -54,7 +61,7 @@ class HardFilter:
         signals = candidate.get('redrob_signals', {})
         willing_to_relocate = signals.get('willing_to_relocate', False)
         
-        base_cities = ['pune', 'noida', 'delhi', 'ncr', 'mumbai', 'hyderabad', 'new delhi']
+        base_cities = JD_ACCEPTED_LOCATIONS
         if 'india' in country or country == 'in':
             in_base_city = any(city in location for city in base_cities)
             if not in_base_city and not willing_to_relocate:
@@ -64,7 +71,7 @@ class HardFilter:
         history = candidate.get('career_history', [])
         if history:
             # Check for Consulting-only career
-            consulting_firms = ['tcs', 'infosys', 'wipro', 'accenture', 'cognizant', 'capgemini', 'tata consultancy']
+            consulting_firms = JD_CONSULTING_FIRMS
             all_consulting = True
             total_months = 0
             
@@ -83,4 +90,20 @@ class HardFilter:
                 if avg_months < 18:
                     return True # Reject: job hopper
                     
+        # 3. Title & Domain Traps
+        title = profile.get('current_title', '').lower()
+        
+        # JD trap: "whose title is 'Marketing Manager' is not a fit"
+        bad_titles = JD_DISQUALIFIED_TITLES
+        if any(bad in title for bad in bad_titles):
+            return True # Reject: non-engineering title
+            
+        # JD trap: "primary expertise is computer vision, speech, or robotics without significant NLP/IR"
+        wrong_domains = JD_DISQUALIFIED_DOMAINS
+        if any(wrong in title for wrong in wrong_domains):
+            # Unless they explicitly mention NLP/IR in their summary
+            summary = profile.get('summary', '').lower()
+            if 'nlp' not in summary and 'information retrieval' not in summary and 'llm' not in summary:
+                return True # Reject: wrong AI domain
+                
         return False
