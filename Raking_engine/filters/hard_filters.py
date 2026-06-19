@@ -1,6 +1,12 @@
+import os
+import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from config.constants import JD_CORE_SKILLS
+
 class HardFilter:
     def __init__(self, behavior_df):
         self.behavior_df = behavior_df
+        self._jd_skills_lower = {s.lower() for s in JD_CORE_SKILLS}
 
     def is_rejected(self, candidate: dict) -> bool:
         cid = candidate.get('candidate_id')
@@ -30,4 +36,60 @@ class HardFilter:
         if is_anomaly:
             return True
             
+        # --- NEW: Hard Quality Floor ---
+        profile = candidate.get('profile', {})
+        years = profile.get('years_of_experience', 0)
+        if years < 3.0:
+            return True  # Reject juniors/entry-level for a Senior role
+            
+        skills = candidate.get('skills', [])
+        if not isinstance(skills, list):
+            skills = []
+            
+        relevant_count = 0
+        for s in skills:
+            if isinstance(s, dict) and 'name' in s:
+                if s['name'].lower().strip() in self._jd_skills_lower:
+                    relevant_count += 1
+                    
+        if relevant_count < 2:
+            return True  # Reject candidates without at least 2 core JD skills
+            
+        # --- NEW: Specific JD Disqualifiers ---
+        
+        # 1. Location & Relocation Filter
+        location = profile.get('location', '').lower()
+        country = profile.get('country', '').lower()
+        signals = candidate.get('redrob_signals', {})
+        willing_to_relocate = signals.get('willing_to_relocate', False)
+        
+        base_cities = ['pune', 'noida', 'delhi', 'ncr', 'mumbai', 'hyderabad', 'new delhi']
+        if 'india' in country or country == 'in':
+            in_base_city = any(city in location for city in base_cities)
+            if not in_base_city and not willing_to_relocate:
+                return True # Reject: not in preferred city and won't relocate
+                
+        # 2. Career History Filters
+        history = candidate.get('career_history', [])
+        if history:
+            # Check for Consulting-only career
+            consulting_firms = ['tcs', 'infosys', 'wipro', 'accenture', 'cognizant', 'capgemini', 'tata consultancy']
+            all_consulting = True
+            total_months = 0
+            
+            for job in history:
+                company = job.get('company', '').lower()
+                if not any(c in company for c in consulting_firms):
+                    all_consulting = False
+                total_months += job.get('duration_months', 0)
+                
+            if all_consulting:
+                return True # Reject: entire career in consulting/services
+                
+            # Check for Job Hoppers (avg tenure < 1.5 years across >= 3 jobs)
+            if len(history) >= 3:
+                avg_months = total_months / len(history)
+                if avg_months < 18:
+                    return True # Reject: job hopper
+                    
         return False

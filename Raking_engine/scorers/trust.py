@@ -1,7 +1,10 @@
-def get_trust_score(candidate_id: str, behavior_df) -> float:
-    if candidate_id not in behavior_df.index:
+def get_trust_score(candidate: dict) -> float:
+    signals = candidate.get('redrob_signals', {})
+    if not signals:
         return 0.0
-    score = behavior_df.loc[candidate_id, 'skill_desc_similarity']
-    if not isinstance(score, (int, float)) or score != score:
-        return 0.0
-    return float(max(0.0, min(1.0, score)))
+        
+    response_rate = signals.get('recruiter_response_rate', 0.0)
+    completion = signals.get('profile_completeness_score', 0) / 100.0
+    
+    # Trust is a mix of how complete their profile is and how well they respond
+    return float((response_rate + completion) / 2.0)

@@ -1,6 +1,11 @@
 import pandas as pd
 import json
 import os
+import sys
+
+# Add the project root to sys.path so we can import constants
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from config.constants import JD_CORE_SKILLS
 
 def audit_top_100():
     # Go up 3 levels: tests -> Raking_engine -> autorecruit-
@@ -37,9 +42,7 @@ def audit_top_100():
     honeypots = 0
     
     # Core JD Skills
-    core = {'python', 'pytorch', 'tensorflow', 'llm', 'nlp', 'langchain', 
-            'vector search', 'pinecone', 'milvus', 'qdrant', 'transformers', 
-            'rag', 'machine learning', 'deep learning'}
+    core = {s.lower() for s in JD_CORE_SKILLS}
             
     # Valid tech titles
     valid_titles = ['engineer', 'scientist', 'developer', 'ml', 'ai', 'data', 'architect', 'research']

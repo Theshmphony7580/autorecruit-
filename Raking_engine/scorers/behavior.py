@@ -1,7 +1,9 @@
-def get_behavior_score(candidate_id: str, behavior_df) -> float:
-    if candidate_id not in behavior_df.index:
+def get_behavior_score(candidate: dict) -> float:
+    signals = candidate.get('redrob_signals', {})
+    if not signals:
         return 0.0
-    score = behavior_df.loc[candidate_id, 'behavior_score']
-    if not isinstance(score, (int, float)) or score != score:
-        return 0.0
-    return float(max(0.0, min(1.0, score)))
+        
+    open_to_work = 1.0 if signals.get('open_to_work_flag', False) else 0.0
+    apps = min(1.0, signals.get('applications_submitted_30d', 0) / 10.0)
+    
+    return float((open_to_work * 0.7) + (apps * 0.3))

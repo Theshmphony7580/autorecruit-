@@ -19,9 +19,9 @@ class CompositeScorer:
         from scorers.behavior import get_behavior_score
         from scorers.trust import get_trust_score
         
-        demand = get_demand_score(candidate_id, self.behavior_df)
-        behavior = get_behavior_score(candidate_id, self.behavior_df)
-        trust = get_trust_score(candidate_id, self.behavior_df)
+        demand = get_demand_score(candidate)
+        behavior = get_behavior_score(candidate)
+        trust = get_trust_score(candidate)
         
         years = candidate.get('profile', {}).get('years_of_experience', 0)
         experience = normalize_experience(years)
