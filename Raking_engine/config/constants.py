@@ -93,6 +93,14 @@ EXPERIENCE_DECAY = 5    # how many years outside the range before score = 0
 
 JD_REALISTIC_SKILL_MAXIMUM = 10
 
+# Behavior Scorer Normalization Ceilings
+BEHAVIOR_RESPONSE_TIME_CEILING_HOURS = 72   # beyond 72h = 0 for responsiveness
+BEHAVIOR_NOTICE_PERIOD_CEILING_DAYS  = 90   # beyond 90 days = 0 for availability
+
+# Trust Scorer Normalization Ceilings
+TRUST_ENDORSEMENTS_MAX     = 50   # 50+ endorsements = max endorsement score
+TRUST_RECENCY_WINDOW_DAYS  = 365  # 1 year inactivity = 0 recency score
+
 TOP_K = 100
 OUTPUT_COLUMNS = ['candidate_id', 'rank', 'score', 'reasoning']
 SCORE_PRECISION = 6

@@ -41,3 +41,9 @@ env/
 
 # Hackathon Rule PDFs (already given to everyone, no need to push)
 resources_provided_by_the_hackthon/
+
+# Tests directory (internal use only)
+Raking_engine/tests/* 
+
+Raking_engine/tests/stage1*
+

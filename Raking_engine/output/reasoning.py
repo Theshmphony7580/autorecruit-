@@ -14,6 +14,12 @@ class ReasoningGenerator:
         career = candidate.get('career_history', [])
         cid = candidate['candidate_id']
         
+        # Get numerical ID for deterministic variations
+        try:
+            cid_num = int(cid.split('_')[1])
+        except:
+            cid_num = 0
+            
         current_company = profile.get('current_company', '')
         current_title = profile.get('current_title', 'Engineer')
         years = profile.get('years_of_experience', 0)
