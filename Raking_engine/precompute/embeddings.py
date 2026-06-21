@@ -3,29 +3,71 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 
 def build_candidate_text(candidate: dict) -> str:
-    """Build embedding text from candidate profile fields."""
+    """Build embedding text from candidate profile fields to maximize semantic signal."""
     profile = candidate.get('profile', {})
     parts = []
 
+    # 1. High-level Context (Title, Experience, Industry)
     title = profile.get('current_title', '')
-    if title: parts.append(title)
+    yoe = profile.get('years_of_experience')
+    industry = profile.get('current_industry', '')
+    
+    context = []
+    if title: context.append(title)
+    if yoe is not None: context.append(f"{yoe} years exp")
+    if industry: context.append(f"in {industry}")
+    if context:
+        parts.append(" ".join(context))
 
+    # 2. Headline & Summary
     headline = profile.get('headline', '')
     if headline: parts.append(headline)
 
     summary = profile.get('summary', '')
-    if summary: parts.append(summary[:500])
+    if summary: parts.append(summary[:300]) # Truncated to save tokens for career history
 
+    # 3. Skills (Sort by duration/endorsements and pick top 20)
     skills = candidate.get('skills', [])
     if skills:
-        skill_names = [s['name'] for s in skills if isinstance(s, dict) and 'name' in s]
+        sorted_skills = sorted(skills, key=lambda x: x.get('duration_months', 0) + x.get('endorsements', 0), reverse=True)
+        skill_names = [s.get('name') for s in sorted_skills if isinstance(s, dict) and s.get('name')][:20]
         if skill_names:
-            parts.append(', '.join(skill_names))
+            parts.append("Skills: " + ', '.join(skill_names))
 
+    # 4. Education
+    education = candidate.get('education', [])
+    if education:
+        edu = education[0] # Grab highest/most recent degree
+        degree = edu.get('degree', '')
+        field = edu.get('field_of_study', '')
+        if degree and field:
+            parts.append(f"Education: {degree} in {field}")
+
+    # 5. Certifications
+    certs = candidate.get('certifications', [])
+    if certs:
+        cert_names = [c.get('name') for c in certs[:3] if c.get('name')]
+        if cert_names:
+            parts.append("Certs: " + ', '.join(cert_names))
+
+    # 6. Career History (Crucial for semantic match)
     career = candidate.get('career_history', [])
     for role in career[:3]:
+        r_title = role.get('title', '')
+        r_company = role.get('company', '')
         desc = role.get('description', '')
-        if desc: parts.append(desc[:300])
+        
+        role_parts = []
+        if r_title and r_company:
+            role_parts.append(f"{r_title} at {r_company}")
+        elif r_title:
+            role_parts.append(r_title)
+            
+        if desc:
+            role_parts.append(desc[:200])
+            
+        if role_parts:
+            parts.append(" - ".join(role_parts))
 
     return ' | '.join(parts) if parts else ''
 
