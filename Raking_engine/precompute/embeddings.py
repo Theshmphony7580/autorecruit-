@@ -125,6 +125,7 @@ def generate_jd_embedding(jd_text: str, model=None):
 if __name__ == '__main__':
     import sys
     import os
+    import argparse
     # Add the Raking_engine directory to the path so we can import config
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     
@@ -135,6 +136,10 @@ if __name__ == '__main__':
         DEFAULT_JD_SIMILARITY
     )
     from precompute.jd_similarity import compute_jd_similarity, save_jd_similarity
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--candidates', default=DEFAULT_CANDIDATES_PATH, help='Path to candidates.jsonl file')
+    args = parser.parse_args()
     
     print("=== STEP 1: Generating/Loading Candidate Embeddings ===")
     ids_path = DEFAULT_EMBEDDINGS_NPY.replace('.npy', '_ids.json')
@@ -149,7 +154,7 @@ if __name__ == '__main__':
     else:
         print("No existing embeddings found. Starting full generation...")
         candidate_embeddings, candidate_ids = generate_embeddings(
-            candidates_path=DEFAULT_CANDIDATES_PATH, 
+            candidates_path=args.candidates, 
             output_path=DEFAULT_EMBEDDINGS_NPY
         )
     

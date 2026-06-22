@@ -86,13 +86,13 @@ submission.csv  →  candidate_id, rank, score, reasoning
 ```
 autorecruit-/
 ├── README.md                         ← You are here
-├── submission_metadata.yaml          ← Portal metadata (Section 10.2)
+├── submission_metadata.yaml          ← Portal metadata 
 ├── jd_summary.txt                    ← Dense token-optimized JD summary used for embedding
 │
 └── Raking_engine/
     ├── rank.py                       ← ★ MAIN ENTRY POINT — produces submission.csv
     ├── requirements.txt              ← Python dependencies + pinned versions
-    ├── Dockerfile                    ← Docker sandbox definition (Section 10.5)
+    ├── Dockerfile                    ← Docker sandbox definition
     ├── config/
     │   ├── constants.py              ← Single source of truth: all weights, thresholds, skill lists
     │   └── paths.py                  ← All file path configuration (edit if dataset location differs)
@@ -220,7 +220,7 @@ python -m precompute.embeddings
 
 4. **Saves candidate embeddings** to `assets/candidate_embeddings.npy` (shape: `[100000, 384]`).
 
-5. **Reads the full JD** from `jd_extracted.txt` and encodes it into a single 384-dim L2-normalized vector.
+5. **Reads the full JD** from `jd_summary.txt` and encodes it into a single 384-dim L2-normalized vector.
 
 6. **Computes cosine similarity** for all 100K candidates in a single vectorized NumPy operation:
    ```python
@@ -420,7 +420,7 @@ Pinecone + Prompt Engineering + Recommendation Systems
 
 #### Component 3: Market Demand Score — 20% &nbsp;`scorers/demand.py`
 
-Measures how much the **recruiting market already wants this candidate**, using 4 platform engagement fields:
+Measures how much the **recruiting market already wants this candidate**, using 4 `redrob_signals` fields:
 
 | Signal | Ceiling | What It Represents |
 |---|---|---|
@@ -565,8 +565,10 @@ A fully reproducible Google Colab sandbox is the recommended way to verify the e
 !git clone https://github.com/Theshmphony7580/autorecruit-
 %cd autorecruit-/Raking_engine
 !pip install -r requirements.txt
-!python -m precompute.embeddings
-!python rank.py --candidates ../data_forensic_files/candidates.jsonl --output submission.csv
+
+# Upload your dataset to the Colab files pane (e.g. sample_100.jsonl)
+!python -m precompute.embeddings --candidates sample_100.jsonl
+!python rank.py --candidates sample_100.jsonl --output submission.csv
 ```
 ---
 
@@ -644,7 +646,7 @@ See [`submission_metadata.yaml`](./submission_metadata.yaml) for primary contact
 ---
 
 <div align="center">
-<sub>Built for the Intelligent Candidate Discovery & Ranking Challenge v4 · Team RUNIC</sub>
+<sub>Built for the Redrob Intelligent Candidate Discovery & Ranking Challenge v4 · Team Theshmphony7580</sub>
 </div>
 ---
 
