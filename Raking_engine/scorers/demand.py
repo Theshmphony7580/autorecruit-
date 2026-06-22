@@ -1,3 +1,8 @@
+import os
+import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.safe_extract import safe_float
+
 def get_demand_score(candidate: dict) -> float:
     """
     Measures how much the market WANTS this candidate.
@@ -7,10 +12,10 @@ def get_demand_score(candidate: dict) -> float:
     if not signals:
         return 0.0
 
-    views    = signals.get('profile_views_received_30d', 0)
-    searches = signals.get('search_appearance_30d', 0)
-    saves    = signals.get('saved_by_recruiters_30d', 0)
-    apps     = signals.get('applications_submitted_30d', 0)
+    views    = safe_float(signals.get('profile_views_received_30d', 0))
+    searches = safe_float(signals.get('search_appearance_30d', 0))
+    saves    = safe_float(signals.get('saved_by_recruiters_30d', 0))
+    apps     = safe_float(signals.get('applications_submitted_30d', 0))
 
     # Normalize against typical max values in a 100k dataset
     v_norm    = min(1.0, views    / 200.0)

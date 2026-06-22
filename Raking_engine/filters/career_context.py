@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config.constants import NON_ML_TITLES, JD_CORE_SKILLS, ML_CAREER_TERMS
+from utils.safe_extract import safe_str
 
 class CareerContextFilter:
     def passes(self, candidate: dict) -> bool:
@@ -10,7 +11,7 @@ class CareerContextFilter:
 
 def compute_stuffer_penalty(candidate: dict) -> float:
     profile = candidate.get('profile', {})
-    title = profile.get('current_title', '').lower()
+    title = safe_str(profile.get('current_title', '')).lower()
     
     has_non_ml_title = any(kw in title for kw in NON_ML_TITLES)
     if not has_non_ml_title:
@@ -19,7 +20,7 @@ def compute_stuffer_penalty(candidate: dict) -> float:
     raw_skills = candidate.get('skills', [])
     if not isinstance(raw_skills, list):
         raw_skills = []
-    candidate_skills = {s['name'].lower().strip() for s in raw_skills if isinstance(s, dict) and 'name' in s}
+    candidate_skills = {safe_str(s.get('name', '')).lower().strip() for s in raw_skills if isinstance(s, dict) and s.get('name')}
     ml_skill_count = len(candidate_skills & JD_CORE_SKILLS)
     
     if ml_skill_count == 0:
@@ -27,7 +28,7 @@ def compute_stuffer_penalty(candidate: dict) -> float:
         
     career_text = ''
     for role in candidate.get('career_history', []):
-        desc = role.get('description', '')
+        desc = safe_str(role.get('description', ''))
         if desc: career_text += ' ' + desc.lower()
         
     ml_mentions = sum(1 for term in ML_CAREER_TERMS if term in career_text)

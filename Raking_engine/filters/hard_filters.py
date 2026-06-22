@@ -9,6 +9,7 @@ from config.constants import (
     JD_ACCEPTED_LOCATIONS, 
     JD_CONSULTING_FIRMS
 )
+from utils.safe_extract import safe_str, safe_float, safe_int, safe_bool
 
 class HardFilter:
     def __init__(self, behavior_df):
@@ -46,7 +47,7 @@ class HardFilter:
             
         # --- NEW: Hard Quality Floor ---
         profile = candidate.get('profile', {})
-        years = profile.get('years_of_experience', 0)
+        years = safe_float(profile.get('years_of_experience', 0))
         if years < 3.0:
             return True  # Reject juniors/entry-level for a Senior role
             
@@ -57,10 +58,10 @@ class HardFilter:
         # --- NEW: Specific JD Disqualifiers ---
         
         # 1. Location & Relocation Filter
-        location = profile.get('location', '').lower()
-        country = profile.get('country', '').lower()
+        location = safe_str(profile.get('location', '')).lower()
+        country = safe_str(profile.get('country', '')).lower()
         signals = candidate.get('redrob_signals', {})
-        willing_to_relocate = signals.get('willing_to_relocate', False)
+        willing_to_relocate = safe_bool(signals.get('willing_to_relocate', False))
         
         base_cities = JD_ACCEPTED_LOCATIONS
         if 'india' in country or country == 'in':
@@ -77,10 +78,10 @@ class HardFilter:
             total_months = 0
             
             for job in history:
-                company = job.get('company', '').lower()
+                company = safe_str(job.get('company', '')).lower()
                 if not any(c in company for c in consulting_firms):
                     all_consulting = False
-                total_months += job.get('duration_months', 0)
+                total_months += safe_int(job.get('duration_months', 0))
                 
             if all_consulting:
                 return True # Reject: entire career in consulting/services
@@ -92,7 +93,7 @@ class HardFilter:
                     return True # Reject: job hopper
                     
         # 3. Title & Domain Traps
-        title = profile.get('current_title', '').lower()
+        title = safe_str(profile.get('current_title', '')).lower()
         
         # JD trap: "whose title is 'Marketing Manager' is not a fit"
         bad_titles = JD_DISQUALIFIED_TITLES
@@ -103,7 +104,7 @@ class HardFilter:
         wrong_domains = JD_DISQUALIFIED_DOMAINS
         if any(wrong in title for wrong in wrong_domains):
             # Unless they explicitly mention NLP/IR in their summary
-            summary = profile.get('summary', '').lower()
+            summary = safe_str(profile.get('summary', '')).lower()
             if 'nlp' not in summary and 'information retrieval' not in summary and 'llm' not in summary:
                 return True # Reject: wrong AI domain
                 

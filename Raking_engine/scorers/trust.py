@@ -3,6 +3,7 @@ import sys
 from datetime import date, datetime
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config.constants import TRUST_ENDORSEMENTS_MAX, TRUST_RECENCY_WINDOW_DAYS
+from utils.safe_extract import safe_float, safe_int, safe_bool, safe_str
 
 
 def get_trust_score(candidate: dict) -> float:
@@ -23,35 +24,35 @@ def get_trust_score(candidate: dict) -> float:
         return 0.0
 
     # 1. Profile completeness — direct 0-100 value (weight: 0.25)
-    completeness = float(signals.get('profile_completeness_score', 0)) / 100.0
+    completeness = safe_float(signals.get('profile_completeness_score', 0)) / 100.0
     completeness = max(0.0, min(1.0, completeness))
 
     # 2. Identity verification — email + phone each contribute 0.5 (weight: 0.25)
-    email_verified = 1.0 if signals.get('verified_email', False) else 0.0
-    phone_verified = 1.0 if signals.get('verified_phone', False) else 0.0
+    email_verified = 1.0 if safe_bool(signals.get('verified_email', False)) else 0.0
+    phone_verified = 1.0 if safe_bool(signals.get('verified_phone', False)) else 0.0
     identity_verified = (email_verified + phone_verified) / 2.0
 
     # 3. Recruiter response rate — direct 0-1 float (weight: 0.20)
-    response_rate = float(signals.get('recruiter_response_rate', 0.0))
+    response_rate = safe_float(signals.get('recruiter_response_rate', 0.0))
     response_rate = max(0.0, min(1.0, response_rate))
 
     # 4. Last active date recency — linear decay over TRUST_RECENCY_WINDOW_DAYS (weight: 0.15)
     recency = 0.0
-    last_active_raw = signals.get('last_active_date', None)
+    last_active_raw = safe_str(signals.get('last_active_date', ''))
     if last_active_raw:
         try:
-            last_active = datetime.strptime(str(last_active_raw), '%Y-%m-%d').date()
+            last_active = datetime.strptime(last_active_raw, '%Y-%m-%d').date()
             days_inactive = (date.today() - last_active).days
             recency = max(0.0, 1.0 - (days_inactive / TRUST_RECENCY_WINDOW_DAYS))
         except (ValueError, TypeError):
             recency = 0.0
 
     # 5. Endorsements received — capped at TRUST_ENDORSEMENTS_MAX (weight: 0.10)
-    endorsements = int(signals.get('endorsements_received', 0))
+    endorsements = safe_int(signals.get('endorsements_received', 0))
     endorsement_score = min(1.0, endorsements / TRUST_ENDORSEMENTS_MAX)
 
     # 6. LinkedIn connected — binary professional identity proof (weight: 0.05)
-    linkedin_score = 1.0 if signals.get('linkedin_connected', False) else 0.0
+    linkedin_score = 1.0 if safe_bool(signals.get('linkedin_connected', False)) else 0.0
 
     trust_score = (
         completeness       * 0.25 +

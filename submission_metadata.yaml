@@ -24,9 +24,9 @@ github_repository_url: "https://github.com/Theshmphony7580/autorecruit-"
 #   docker build -t autorecruit-ranker .
 #   docker run -v /path/to/data:/data autorecruit-ranker \
 #     python rank.py --candidates /data/candidates.jsonl --output /data/submission.csv
-# A Streamlit demo (app.py) is also included for interactive small-sample testing:
-#   streamlit run Raking_engine/app.py
-sandbox_demo_link: "See Dockerfile and app.py in Raking_engine/ — docker build + run recipe in README.md"
+# A reproducible Google Colab notebook is the primary sandbox environment:
+#   https://colab.research.google.com/drive/[YOUR_LINK_HERE]
+sandbox_demo_link: "Google Colab Notebook (link to be generated upon submission). Dockerfile also available in Raking_engine/"
 
 # AI tools used during development (honest declaration — not penalized)
 # All architecture decisions, scoring weights, filter logic, and JD analysis

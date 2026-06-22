@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config.constants import JD_CORE_SKILLS
+from utils.safe_extract import safe_str, safe_float
 
 class ReasoningGenerator:
     def __init__(self, behavior_df):
@@ -20,26 +21,27 @@ class ReasoningGenerator:
         except:
             cid_num = 0
             
-        current_company = profile.get('current_company', '')
-        current_title = profile.get('current_title', 'Engineer')
-        years = profile.get('years_of_experience', 0)
+        current_company = safe_str(profile.get('current_company', ''))
+        current_title = safe_str(profile.get('current_title', 'Engineer'))
+        if not current_title: current_title = 'Engineer'
+        years = safe_float(profile.get('years_of_experience', 0))
         
         if not isinstance(skills, list): skills = []
-        relevant_skills = [s['name'] for s in skills if isinstance(s, dict) and 'name' in s and s['name'].lower() in self._jd_skills_lower][:3]
+        relevant_skills = [safe_str(s.get('name', '')) for s in skills if isinstance(s, dict) and s.get('name') and safe_str(s.get('name', '')).lower() in self._jd_skills_lower][:3]
         
         recent_desc = ""
         if career:
             for h in career:
-                desc = h.get('description', '')
+                desc = safe_str(h.get('description', ''))
                 if desc and any(t in desc.lower() for t in ['recommendation', 'search', 'retrieval', 'ranking']):
                     recent_desc = desc[:150]
                     break
             if not recent_desc and career[0].get('description'):
-                recent_desc = career[0]['description'][:150]
+                recent_desc = safe_str(career[0].get('description', ''))[:150]
                 
         signals = candidate.get('redrob_signals', {})
-        response_rate = signals.get('recruiter_response_rate', 0.0)
-        saved = signals.get('saved_by_recruiters_30d', 0)
+        response_rate = safe_float(signals.get('recruiter_response_rate', 0.0))
+        saved = safe_float(signals.get('saved_by_recruiters_30d', 0))
             
         parts = []
         if current_company and years > 0:

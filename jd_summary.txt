@@ -1,0 +1,19 @@
+Senior AI Engineer – Redrob AI, India, Hybrid, 5-9 yrs
+
+ROLE: Own ranking, retrieval, candidate-JD matching. Ship v2 hybrid ranker (90 days); build eval infra (A/B, offline benchmarks, feedback loops).
+
+REQUIRED (production experience):
+- Embeddings retrieval: sentence-transformers, BGE, E5, OpenAI; embedding drift, index refresh, retrieval-quality regression.
+- Vector/hybrid search: Pinecone, Weaviate, Qdrant, Milvus, Elasticsearch, FAISS.
+- Ranking: BM25, dense, hybrid, LLM re-ranking, learning-to-rank (XGBoost, neural).
+- Eval: NDCG, MRR, MAP, offline-online correlation, A/B testing.
+- Strong Python, production code quality.
+
+PREFERRED:
+- LLM fine-tuning: LoRA, QLoRA, PEFT.
+- Distributed systems, large-scale inference.
+- NLP/IR, HR-tech, open-source ML contributions.
+
+IDEAL: 6-8 yrs, 4-5 yrs applied ML/AI at product companies. Shipped end-to-end ranking/search/recommendation at scale. Opinions on hybrid vs dense retrieval, offline vs online eval, fine-tune vs prompting.
+
+DISQUALIFIERS: pure research (no production); LangChain-only AI (<12 mo); no production code in 18 mo; entire career in IT services (TCS, Infosys, Wipro, Accenture); CV/speech/robotics without NLP/IR.

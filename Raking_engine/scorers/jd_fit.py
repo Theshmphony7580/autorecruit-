@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config.constants import JD_CORE_SKILLS, ML_CAREER_TERMS, JD_FIT_SUB_WEIGHTS, JD_REALISTIC_SKILL_MAXIMUM
+from utils.safe_extract import safe_str
 
 class JDFitScorer:
     def compute(self, candidate: dict, candidate_id: str, jd_sim_df) -> float:
@@ -14,15 +15,15 @@ class JDFitScorer:
         raw_skills = candidate.get('skills', [])
         if not isinstance(raw_skills, list):
             raw_skills = []
-        candidate_skills_lower = {s['name'].lower().strip() for s in raw_skills if isinstance(s, dict) and 'name' in s}
+        candidate_skills_lower = {safe_str(s.get('name', '')).lower().strip() for s in raw_skills if isinstance(s, dict) and s.get('name')}
 
         overlap_count = len(candidate_skills_lower & JD_CORE_SKILLS)
         skill_overlap = overlap_count / JD_REALISTIC_SKILL_MAXIMUM
         skill_overlap = min(1.0, skill_overlap)
 
         profile = candidate.get('profile', {})
-        title = profile.get('current_title', '').lower()
-        headline = profile.get('headline', '').lower()
+        title = safe_str(profile.get('current_title', '')).lower()
+        headline = safe_str(profile.get('headline', '')).lower()
         text = f"{title} {headline}"
 
         has_ml_context = any(term in text for term in ML_CAREER_TERMS)

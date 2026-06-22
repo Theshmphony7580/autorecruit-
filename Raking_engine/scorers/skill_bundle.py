@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config.constants import JD_RELEVANT_BUNDLES
+from utils.safe_extract import safe_str
 
 class BundleScorer:
     def compute(self, candidate: dict) -> float:
@@ -9,7 +10,7 @@ class BundleScorer:
         if not isinstance(raw_skills, list):
             return 0.0
 
-        candidate_skills_lower = {s['name'].lower().strip() for s in raw_skills if isinstance(s, dict) and 'name' in s}
+        candidate_skills_lower = {safe_str(s.get('name', '')).lower().strip() for s in raw_skills if isinstance(s, dict) and s.get('name')}
 
         bundle_matches = 0
         for bundle in JD_RELEVANT_BUNDLES:
