@@ -83,7 +83,7 @@ reproduction:
   precompute_working_directory: "Raking_engine/"
 
   # Ranking step
-  ranking_command: "python rank.py --candidates ../data_forensic\\ _files/candidates.jsonl --output submission.csv"
+  ranking_command: "python rank.py --candidates assets/candidates.jsonl --output submission.csv"
   ranking_working_directory: "Raking_engine/"
 
   # Alternate using defaults (if dataset is placed at the configured path)

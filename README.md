@@ -189,13 +189,11 @@ pip install -r requirements.txt
 
 ### Step 2 — Place the Dataset
 
-Place the `candidates.jsonl` file at:
+The engine accepts any dataset file name and location using the `--candidates` flag. For convenience, if you do not want to use flags, you can place your dataset in the `assets/` folder:
 
 ```
-autorecruit-/data_forensic _files/candidates.jsonl
+autorecruit-/Raking_engine/assets/candidates.jsonl
 ```
-
-> If your file is in a different location, open `Raking_engine/config/paths.py` and update `DEFAULT_CANDIDATES_PATH`.
 
 ---
 
@@ -550,10 +548,10 @@ docker build -t autorecruit-ranker .
 
 # Run ranking on your dataset
 docker run \
-  -v /absolute/path/to/data_forensic_files:/data \
+  -v /absolute/path/to/your/dataset/folder:/data \
   -v /absolute/path/to/assets:/app/assets \
   autorecruit-ranker \
-  python rank.py --candidates /data/candidates.jsonl --output /data/submission.csv
+  python rank.py --candidates /data/your_dataset_name.jsonl --output /data/submission.csv
 ```
 
 **Google Colab Sandbox Demo** (for online end-to-end testing):
