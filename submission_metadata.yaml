@@ -1,52 +1,47 @@
 # =============================================================================
-# Redrob Hackathon v4 — Submission Metadata
-# Mirror of the portal submission form fields as required by Section 10.2
-# of the submission specification.
+# RUNIC 
 # =============================================================================
 
 # ---------------------------------------------------------------------------
-# 10.2 Portal Metadata — Required Fields
+# Portal Metadata
 # ---------------------------------------------------------------------------
 
-team_name: "Theshmphony7580"
-
-primary_contact_name: "Hackathon Participant"
-primary_contact_email: "your_email@example.com"
-primary_contact_phone: "555-555-5555"
+team_name: "RUNIC"
+primary_contact_name: "Mohit Dharmesh Kamble"
+primary_contact_email: "kamblemohitd@proton.me"
+primary_contact_phone: "+91 8799173994"
 
 github_repository_url: "https://github.com/Theshmphony7580/autorecruit-"
 
-# Sandbox / demo link (Section 10.5)
+# Sandbox / demo link
 # A working hosted environment where the ranking system can be run on a small
 # candidate sample (≤100 candidates) end-to-end within the compute budget.
-# Our sandbox is packaged as a Dockerfile in the repository root:
-#   cd Raking_engine
-#   docker build -t autorecruit-ranker .
-#   docker run -v /path/to/data:/data autorecruit-ranker \
-#     python rank.py --candidates /data/candidates.jsonl --output /data/submission.csv
-# A reproducible Google Colab notebook is the primary sandbox environment:
-#   https://colab.research.google.com/drive/[YOUR_LINK_HERE]
+
 sandbox_demo_link: "Google Colab Notebook (link to be generated upon submission). Dockerfile also available in Raking_engine/"
 
-# AI tools used during development (honest declaration — not penalized)
+# AI tools used during development 
 # All architecture decisions, scoring weights, filter logic, and JD analysis
-# were performed by the team. AI tools were used only as coding assistants.
+# were performed by me . AI tools were used only as coding assistants.
 ai_tools_declared:
-  - "Claude"
-  - "Gemini"
+  - "Github Copilot"
+  - "Antigravity" (IDE)
+  - "Claude" (Architech & Logic)
+  - "Gemini" (Architech & Logic)
+  - "claude code" 
+  
 
 # One-line description of the machine where the code was developed and tested
 compute_environment_summary: "Windows 11, Intel CPU, 16 GB RAM, CPU-only, Python 3.13, no GPU"
 
 # ---------------------------------------------------------------------------
-# Team Member List (name + email for each member)
+# Team Member List 
 # ---------------------------------------------------------------------------
 team_members:
-  - name: "Hackathon Participant"
-    email: "your_email@example.com"
+  - name: "Mohit Dharmesh Kamble"
+    email: "kamblemohitd@proton.me"
 
 # ---------------------------------------------------------------------------
-# 10.2 Methodology Summary (≤200 words — used at Stage 4 manual review)
+# Methodology Summary
 # ---------------------------------------------------------------------------
 methodology_summary: >
   We built a two-phase CPU-only ranking engine. Phase 1 (offline pre-computation):
@@ -67,7 +62,7 @@ methodology_summary: >
   reasoning is generated from real profile fields only — no hallucination possible.
 
 # ---------------------------------------------------------------------------
-# Compute Constraints Compliance (Section 3 of spec)
+# Compute Constraints Compliance 
 # ---------------------------------------------------------------------------
 compute_constraints:
   total_ranking_runtime: "< 60 seconds wall-clock (well within 5-minute limit)"
@@ -80,14 +75,14 @@ compute_constraints:
   external_api_calls_during_ranking: false
 
 # ---------------------------------------------------------------------------
-# Reproducibility — Single command to produce the submission CSV (Section 10.3)
+# Reproducibility — Single command to produce the submission CSV 
 # ---------------------------------------------------------------------------
 reproduction:
-  # Pre-computation (run once offline — may exceed 5-min window, documented in README)
+  # Pre-computation
   precompute_command: "python -m precompute.embeddings"
   precompute_working_directory: "Raking_engine/"
 
-  # Ranking step — must complete within 5 minutes in the sandbox
+  # Ranking step
   ranking_command: "python rank.py --candidates ../data_forensic\\ _files/candidates.jsonl --output submission.csv"
   ranking_working_directory: "Raking_engine/"
 
@@ -99,7 +94,7 @@ reproduction:
   install_command: "pip install -r requirements.txt"
 
 # ---------------------------------------------------------------------------
-# Output File Specification Compliance (Section 2 & 3 of spec)
+# Output File Specification Compliance 
 # ---------------------------------------------------------------------------
 output_compliance:
   filename_format: "team_xxx.csv"
@@ -113,7 +108,7 @@ output_compliance:
   reasoning_style: "data-grounded, pulls specific fields from candidate JSON — no hallucination"
 
 # ---------------------------------------------------------------------------
-# Honeypot Handling (Section 7 of spec)
+# Honeypot Handling 
 # ---------------------------------------------------------------------------
 honeypot_handling:
   strategy: >
@@ -128,7 +123,7 @@ honeypot_handling:
   precomputed_forensic_file: "Raking_engine/assets/candidate_behavior_scores_full.csv"
 
 # ---------------------------------------------------------------------------
-# Scoring Architecture Summary (for Stage 4 / 5 reference)
+# Scoring Architecture Summary 
 # ---------------------------------------------------------------------------
 scoring_architecture:
   embedding_model: "BAAI/bge-small-en-v1.5"

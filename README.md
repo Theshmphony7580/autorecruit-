@@ -1,7 +1,7 @@
 <div align="center">
 
-# AutoRecruit
-### Redrob Intelligent Candidate Discovery & Ranking Engine
+# Runic
+### Intelligent Candidate Discovery & Ranking Engine
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)
 ![CPU Only](https://img.shields.io/badge/Compute-CPU--Only-green)
@@ -9,7 +9,7 @@
 ![Memory](https://img.shields.io/badge/RAM--%3C2GB%20during%20ranking-yellow)
 ![License](https://img.shields.io/badge/License-MIT-lightgrey)
 
-**Team:** `Theshmphony7580` &nbsp;·&nbsp; **Hackathon:** Redrob Intelligent Candidate Discovery & Ranking Challenge v4 &nbsp;·&nbsp; **Environment:** Windows 11 · 16 GB RAM · CPU-only · Python 3.13
+**Team:** `RUNIC` &nbsp;·&nbsp; **Hackathon:** Intelligent Candidate Discovery & Ranking Challenge v4 &nbsp;·&nbsp; **Environment:** Windows 11 · 16 GB RAM · CPU-only · Python 3.13
 
 </div>
 
@@ -17,7 +17,7 @@
 
 ## Overview
 
-This repository contains a **production-grade, CPU-only candidate ranking engine** built for the Redrob Hackathon v4. Given a pool of **100,000 candidate profiles** (JSONL) and a Job Description for a *Senior AI Engineer* role, the engine outputs a ranked CSV of the **top 100 most suitable candidates** — each with a score and a data-grounded reasoning string.
+This repository contains a **production-grade, CPU-only candidate ranking engine** built for an Intelligent Candidate Discovery Hackathon. Given a pool of **100,000 candidate profiles** (JSONL) and a Job Description for a *Senior AI Engineer* role, the engine outputs a ranked CSV of the **top 100 most suitable candidates** — each with a score and a data-grounded reasoning string.
 
 > **Key design constraint:** The full ranking step (after pre-computation) completes in **under 60 seconds** on a 16 GB CPU machine with no GPU and no network access.
 
@@ -189,7 +189,7 @@ pip install -r requirements.txt
 
 ### Step 2 — Place the Dataset
 
-Place the `candidates.jsonl` file provided by Redrob at:
+Place the `candidates.jsonl` file at:
 
 ```
 autorecruit-/data_forensic _files/candidates.jsonl
@@ -420,7 +420,7 @@ Pinecone + Prompt Engineering + Recommendation Systems
 
 #### Component 3: Market Demand Score — 20% &nbsp;`scorers/demand.py`
 
-Measures how much the **recruiting market already wants this candidate**, using 4 `redrob_signals` fields:
+Measures how much the **recruiting market already wants this candidate**, using 4 platform engagement fields:
 
 | Signal | Ceiling | What It Represents |
 |---|---|---|
@@ -518,7 +518,7 @@ Joined with `". "`, capped at **300 characters**. This satisfies Stage 4's *spec
 | **Score monotonicity** | Non-increasing with rank | PASS: Heap sort guarantees this |
 | **Honeypot rate** | < 10% in top 100 | PASS: Actively filtered at Stage 1 |
 
-> **Note on pre-computation time:** The `precompute.embeddings` step may take 5–10 minutes but is a one-time offline step. It is **not** counted in the 5-minute ranking budget. The sandbox only runs `rank.py`.
+> **Note on pre-computation time:** The `precompute.embeddings` step may take ~1.5 to 2 hours for the full 100,000 dataset on a standard CPU, but it is a **one-time offline step**. It is **not** counted in the 5-minute ranking budget. The Colab sandbox runs on a small sample, taking only seconds.
 
 ---
 
@@ -644,7 +644,7 @@ See [`submission_metadata.yaml`](./submission_metadata.yaml) for primary contact
 ---
 
 <div align="center">
-<sub>Built for the Redrob Intelligent Candidate Discovery & Ranking Challenge v4 · Team Theshmphony7580</sub>
+<sub>Built for the Intelligent Candidate Discovery & Ranking Challenge v4 · Team RUNIC</sub>
 </div>
 ---
 
