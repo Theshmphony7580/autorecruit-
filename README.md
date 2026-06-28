@@ -8,6 +8,7 @@
 ![Runtime](https://img.shields.io/badge/Ranking%20Runtime-%3C60s-brightgreen)
 ![Memory](https://img.shields.io/badge/RAM-%3C2GB%20during%20ranking-yellow)
 ![License](https://img.shields.io/badge/License-MIT-lightgrey)
+[![Open In Colab](https://colab.research.google.com/drive/1G5z7H-Q5jqIWmlmIG1oGczPgJtd6IMo8?usp=sharing)
 
 **Team:** `RUNIC` &nbsp;·&nbsp; **Hackathon:** Intelligent Candidate Discovery & Ranking Challenge &nbsp;·&nbsp; **Environment:** Windows 11 · 16 GB RAM · CPU-only · Python 3.13
 
@@ -25,8 +26,8 @@ The system cleanly separates work into two phases:
 
 | Phase | What It Does | When to Run | Runtime |
 |---|---|---|---|
-| **Pre-Computation** | Generates embeddings + JD similarity scores for all 100K candidates | Once, offline | ~5–10 min |
-| **Ranking** | Streams candidates, filters, scores, outputs `submission.csv` | Every run / sandbox | **< 60 seconds** |
+| **Pre-Computation** | Generates embeddings + JD similarity scores for all 100K candidates | Once before ranking (requires internet for initial model download) | ~1.5–2 hrs (full 100K pool) |
+| **Ranking** | Streams candidates, filters, scores, outputs `submission.csv` | Every run / sandbox (100% offline) | **< 60 seconds** |
 
 ---
 
@@ -192,9 +193,9 @@ autorecruit-/Raking_engine/assets/candidates.jsonl
 
 ## Step-by-Step Reproduction
 
-### Pre-Computation — Run Once (Offline)
+### Pre-Computation — Run Once Before Ranking (Requires Internet for Model Download)
 
-> This step can take 5–10 minutes on a CPU. It only needs to run **once**. All outputs are cached to disk and reused on every subsequent ranking run. This step is **not** counted in the 5-minute ranking budget.
+> This step takes ~1.5–2 hours on a CPU for the full 100K dataset (or just seconds/minutes on a smaller sample/GPU). It requires an internet connection on the **very first run** to download the ~130 MB HuggingFace embedding model. Once run, all outputs and model weights are cached to disk locally and reused on every subsequent ranking run. This step is **not** counted in the 5-minute ranking budget.
 
 ```bash
 # From the Raking_engine/ directory:

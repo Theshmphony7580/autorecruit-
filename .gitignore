@@ -9,8 +9,10 @@
 # Exceptions: Force Git to track our essential AI configuration CSVs!
 !Raking_engine/assets/candidate_behavior_scores_full.csv
 !Raking_engine/assets/frequent_skill_bundles.csv
+!sample_100.jsonl
 
 # Agent / Brainstorming Scratchpads
+CLAUDE.md
 .claude/
 .planning/
 .agents/
@@ -43,4 +45,9 @@ env/
 resources_provided_by_the_hackthon/
 Raking_engine/tests 
 readme_2.md
+Raking_engine/PRD_2.md
+Raking_engine/PRD.md    
+Raking_engine/INSTRUCTIONS_FOR_JUDGES.md
+
+
 
