@@ -36,4 +36,14 @@ class CompositeScorer:
         )
         
         final = base - (stuffer_penalty * 0.15)
+        candidate['_score_breakdown'] = {
+            'jd': jd_fit * WEIGHTS['jd_fit'],
+            'bundle': bundle * WEIGHTS['bundle_quality'],
+            'demand': demand * WEIGHTS['demand'],
+            'behavior': behavior * WEIGHTS['behavior'],
+            'trust': trust * WEIGHTS['trust'],
+            'exp': experience * WEIGHTS['experience'],
+            'penalty': stuffer_penalty * 0.15
+        }
         return max(0.0, final)
+

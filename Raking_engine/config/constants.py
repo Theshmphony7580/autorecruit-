@@ -8,10 +8,14 @@ Every weight, threshold, skill list, and path used by the ranking engine.
 # JD Core Skills (must-have for relevant candidates)
 JD_CORE_SKILLS = {
     'embeddings', 'vector search', 'semantic search', 'information retrieval',
-    'faiss', 'pinecone', 'weaviate', 'qdrant', 'milvus', 'opensearch',
+    'faiss', 'pinecone', 'weaviate', 'qdrant', 'milvus', 'opensearch', 'elasticsearch',
     'langchain', 'rag', 'llamaindex', 'prompt engineering',
-    'hugging face', 'sentence transformers', 'transformers',
+    'hugging face', 'sentence transformers', 'transformers', 'openai', 'bge', 'e5',
     'llms', 'machine learning', 'ml', 'nlp', 'recommendation systems',
+    'fine-tuning', 'lora', 'qlora', 'peft',
+    'bm25', 'xgboost', 'learning-to-rank',
+    'ndcg', 'mrr', 'map', 'a/b testing',
+    'python', 'distributed systems',
 }
 
 # Specific Disqualifiers defined by the Job Description Policies
@@ -91,7 +95,7 @@ JD_EXPERIENCE_MIN = 5   # years
 JD_EXPERIENCE_MAX = 9   # years
 EXPERIENCE_DECAY = 5    # how many years outside the range before score = 0
 
-JD_REALISTIC_SKILL_MAXIMUM = 10
+JD_REALISTIC_SKILL_MAXIMUM = 15
 
 # Behavior Scorer Normalization Ceilings
 BEHAVIOR_RESPONSE_TIME_CEILING_HOURS = 72   # beyond 72h = 0 for responsiveness

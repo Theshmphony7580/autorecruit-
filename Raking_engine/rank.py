@@ -86,13 +86,13 @@ def main():
     reason_gen = ReasoningGenerator(behavior_df)
     
     results = []
+    explanations = reason_gen.generate_all(ranked)
     for rank, (score, cid, candidate) in enumerate(ranked, 1):
-        reasoning = reason_gen.generate(candidate, score)
         results.append({
             'candidate_id': cid,
             'rank': rank,
             'score': round(score, 6),
-            'reasoning': reasoning
+            'reasoning': explanations[rank - 1]
         })
         
     print("\n[6/6] Writing submission.csv...")
