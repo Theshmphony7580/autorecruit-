@@ -6,10 +6,10 @@
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)
 ![CPU Only](https://img.shields.io/badge/Compute-CPU--Only-green)
 ![Runtime](https://img.shields.io/badge/Ranking%20Runtime-%3C60s-brightgreen)
-![Memory](https://img.shields.io/badge/RAM--%3C2GB%20during%20ranking-yellow)
+![Memory](https://img.shields.io/badge/RAM-%3C2GB%20during%20ranking-yellow)
 ![License](https://img.shields.io/badge/License-MIT-lightgrey)
 
-**Team:** `RUNIC` &nbsp;·&nbsp; **Hackathon:** Intelligent Candidate Discovery & Ranking Challenge v4 &nbsp;·&nbsp; **Environment:** Windows 11 · 16 GB RAM · CPU-only · Python 3.13
+**Team:** `RUNIC` &nbsp;·&nbsp; **Hackathon:** Intelligent Candidate Discovery & Ranking Challenge &nbsp;·&nbsp; **Environment:** Windows 11 · 16 GB RAM · CPU-only · Python 3.13
 
 </div>
 
@@ -19,14 +19,65 @@
 
 This repository contains a **production-grade, CPU-only candidate ranking engine** built for an Intelligent Candidate Discovery Hackathon. Given a pool of **100,000 candidate profiles** (JSONL) and a Job Description for a *Senior AI Engineer* role, the engine outputs a ranked CSV of the **top 100 most suitable candidates** — each with a score and a data-grounded reasoning string.
 
-> **Key design constraint:** The full ranking step (after pre-computation) completes in **under 60 seconds** on a 16 GB CPU machine with no GPU and no network access.
+> **Key design constraint:** The full ranking step (after pre-computation) completes in **under 60 seconds** on a 16 GB CPU machine with no GPU and no network access — well within the 5-minute spec limit.
 
-The system separates work into two clearly defined phases:
+The system cleanly separates work into two phases:
 
 | Phase | What It Does | When to Run | Runtime |
 |---|---|---|---|
 | **Pre-Computation** | Generates embeddings + JD similarity scores for all 100K candidates | Once, offline | ~5–10 min |
-| **Ranking** | Streams candidates, filters, scores, and outputs `submission.csv` | Every run / sandbox | **< 60 seconds** |
+| **Ranking** | Streams candidates, filters, scores, outputs `submission.csv` | Every run / sandbox | **< 60 seconds** |
+
+---
+
+## Repository Structure
+
+```
+autorecruit-/
+├── README.md                         ← You are here
+├── submission_metadata.yaml          ← Portal metadata (Section 10.2)
+├── jd_summary.txt                    ← Dense token-optimized JD summary for embedding
+│
+└── Raking_engine/
+    ├── rank.py                       ← ★ MAIN ENTRY POINT — produces submission.csv
+    ├── requirements.txt              ← Python dependencies + pinned versions
+    ├── Dockerfile                    ← Docker sandbox definition (Section 10.5)
+    ├── config/
+    │   ├── constants.py              ← Single source of truth: weights, thresholds, skill lists
+    │   └── paths.py                  ← All file path configuration
+    ├── precompute/
+    │   ├── embeddings.py             ← Offline: build candidate text + generate .npy embeddings
+    │   └── jd_similarity.py         ← Offline: compute cosine similarity against JD embedding
+    ├── filters/
+    │   ├── hard_filters.py           ← HardFilter class (7 disqualification rules)
+    │   ├── jd_skill_filter.py        ← Two-pass ML skill / career-text gate
+    │   └── career_context.py        ← Keyword-stuffer detection + penalty
+    ├── scorers/
+    │   ├── jd_fit.py                 ← JD Fit: semantic similarity + keyword overlap + title context
+    │   ├── skill_bundle.py           ← Bundle Quality: co-occurring skill cluster scoring
+    │   ├── demand.py                 ← Market Demand: platform engagement signals
+    │   ├── behavior.py               ← Behavior: job-search seriousness + reliability
+    │   └── trust.py                  ← Trust: profile credibility + identity verification
+    ├── composite/
+    │   └── formula.py                ← Weighted composite formula + stuffer penalty application
+    ├── loaders/
+    │   ├── jsonl_stream.py           ← Memory-safe JSONL reader (yields one line at a time)
+    │   ├── csv_loader.py             ← Loads pre-computed behavior + JD similarity CSVs
+    │   └── embeddings.py             ← Loads candidate_embeddings.npy + IDs mapping
+    ├── output/
+    │   ├── top_k.py                  ← O(N log K) min-heap tracker
+    │   └── reasoning.py             ← Per-candidate reasoning string generator
+    ├── utils/
+    │   ├── validators.py             ← Post-run submission format validator
+    │   ├── normalize.py              ← Experience flat-top linear decay function
+    │   └── timing.py                 ← Wall-clock timing context manager
+    └── assets/                       ← Pre-computed artifacts (⚠ NOT in repo — must be generated)
+        ├── candidate_embeddings.npy        ⚠ Generate via: python -m precompute.embeddings
+        ├── candidate_embeddings_ids.json   ⚠ Generated alongside embeddings.npy
+        └── jd_similarity_scores.csv        ⚠ Generated alongside embeddings.npy
+```
+
+> **WARNING:** The `assets/` directory contains large binary files that are **not committed to the repository**. Run the pre-computation step before running `rank.py`.
 
 ---
 
@@ -45,7 +96,7 @@ candidates.jsonl (100K profiles)
 │   └─ Save → assets/candidate_embeddings.npy          │
 │                                                      │
 │  precompute/jd_similarity.py                         │
-│   ├─ Encode full JD text → single 384-dim vector     │
+│   ├─ Encode JD summary → single 384-dim vector       │
 │   ├─ dot(candidate_embeddings, jd_embedding)         │
 │   └─ Save → assets/jd_similarity_scores.csv          │
 └──────────────────────────────────────────────────────┘
@@ -78,65 +129,6 @@ candidates.jsonl (100K profiles)
         ▼
 submission.csv  →  candidate_id, rank, score, reasoning
 ```
-
----
-
-## Repository Structure
-
-```
-autorecruit-/
-├── README.md                         ← You are here
-├── submission_metadata.yaml          ← Portal metadata 
-├── jd_summary.txt                    ← Dense token-optimized JD summary used for embedding
-│
-└── Raking_engine/
-    ├── rank.py                       ← ★ MAIN ENTRY POINT — produces submission.csv
-    ├── requirements.txt              ← Python dependencies + pinned versions
-    ├── Dockerfile                    ← Docker sandbox definition
-    ├── config/
-    │   ├── constants.py              ← Single source of truth: all weights, thresholds, skill lists
-    │   └── paths.py                  ← All file path configuration (edit if dataset location differs)
-    │
-    ├── precompute/
-    │   ├── embeddings.py             ← Offline: build candidate text + generate .npy embeddings
-    │   └── jd_similarity.py         ← Offline: compute cosine similarity against JD embedding
-    │
-    ├── filters/
-    │   ├── hard_filters.py           ← HardFilter class (7 disqualification rules)
-    │   ├── jd_skill_filter.py        ← Two-pass ML skill / career-text gate
-    │   └── career_context.py        ← Keyword-stuffer detection + penalty
-    │
-    ├── scorers/
-    │   ├── jd_fit.py                 ← JD Fit: semantic similarity + keyword overlap + title context
-    │   ├── skill_bundle.py           ← Bundle Quality: co-occurring skill cluster scoring
-    │   ├── demand.py                 ← Market Demand: platform engagement signals
-    │   ├── behavior.py               ← Behavior: job-search seriousness + reliability
-    │   └── trust.py                  ← Trust: profile credibility + identity verification
-    │
-    ├── composite/
-    │   └── formula.py                ← Weighted composite formula + stuffer penalty application
-    │
-    ├── loaders/
-    │   ├── jsonl_stream.py           ← Memory-safe JSONL reader (yields one line at a time)
-    │   ├── csv_loader.py             ← Loads pre-computed behavior + JD similarity CSVs
-    │   └── embeddings.py             ← Loads candidate_embeddings.npy + IDs mapping
-    │
-    ├── output/
-    │   ├── top_k.py                  ← O(N log K) min-heap tracker
-    │   └── reasoning.py             ← Per-candidate reasoning string generator
-    │
-    ├── utils/
-    │   ├── validators.py             ← Post-run submission format validator (100 rows, monotonic, etc.)
-    │   ├── normalize.py              ← Experience flat-top linear decay function
-    │   └── timing.py                 ← Wall-clock timing context manager
-    │
-    └── assets/                       ← Pre-computed artifacts (⚠ NOT in repo — must be generated)
-        ├── candidate_embeddings.npy        ⚠ Generate via: python -m precompute.embeddings
-        ├── candidate_embeddings_ids.json   ⚠ Generated alongside embeddings.npy
-        └── jd_similarity_scores.csv        ⚠ Generated alongside embeddings.npy
-```
-
-> **WARNING:** The `assets/` directory contains large binary files that are **not committed to the repository**. You must run the pre-computation step (see below) to generate them before running `rank.py`.
 
 ---
 
@@ -184,12 +176,13 @@ pip install -r requirements.txt
 | `sentence-transformers` | 2.2.0 | BAAI/bge-small-en-v1.5 embedding model |
 | `scikit-learn` | 1.1.0 | Utility normalization helpers |
 | `tqdm` | 4.60.0 | Progress bars during pre-computation |
+| `pytest` | 7.0.0 | Test suite |
 
 ---
 
 ### Step 2 — Place the Dataset
 
-The engine accepts any dataset file name and location using the `--candidates` flag. For convenience, if you do not want to use flags, you can place your dataset in the `assets/` folder:
+Place your dataset file inside the `assets/` folder, or pass it explicitly with the `--candidates` flag:
 
 ```
 autorecruit-/Raking_engine/assets/candidates.jsonl
@@ -201,52 +194,46 @@ autorecruit-/Raking_engine/assets/candidates.jsonl
 
 ### Pre-Computation — Run Once (Offline)
 
-> This step can take 5–10 minutes on a CPU. It only needs to be run **once**. All outputs are cached to disk and reused on every subsequent ranking run.
+> This step can take 5–10 minutes on a CPU. It only needs to run **once**. All outputs are cached to disk and reused on every subsequent ranking run. This step is **not** counted in the 5-minute ranking budget.
 
 ```bash
 # From the Raking_engine/ directory:
 python -m precompute.embeddings
 ```
 
-**What this step does, in order:**
+**What this step does:**
 
-1. **Loads the embedding model** — `BAAI/bge-small-en-v1.5` (33M parameters, 384-dim output, ~130 MB). Downloads from HuggingFace on first run, cached locally thereafter.
-
-2. **Streams `candidates.jsonl` line-by-line** — calls `build_candidate_text()` for each profile to construct a rich, dense text string.
-
-3. **Encodes all 100K candidates** into 384-dimensional **L2-normalized** embedding vectors, in batches of 64.
-
-4. **Saves candidate embeddings** to `assets/candidate_embeddings.npy` (shape: `[100000, 384]`).
-
-5. **Reads the full JD** from `jd_summary.txt` and encodes it into a single 384-dim L2-normalized vector.
-
-6. **Computes cosine similarity** for all 100K candidates in a single vectorized NumPy operation:
+1. Loads `BAAI/bge-small-en-v1.5` (33M parameters, 384-dim, ~130 MB). Downloads from HuggingFace on first run, cached locally thereafter.
+2. Streams `candidates.jsonl` line-by-line and calls `build_candidate_text()` for each profile.
+3. Encodes all 100K candidates into 384-dimensional **L2-normalized** embedding vectors, in batches of 64.
+4. Saves candidate embeddings to `assets/candidate_embeddings.npy` (shape: `[100000, 384]`).
+5. Reads `jd_summary.txt` and encodes it into a single 384-dim L2-normalized vector.
+6. Computes cosine similarity for all 100K candidates via a single vectorized NumPy operation: 
    ```python
    similarities = np.dot(candidate_embeddings, jd_embedding)
-   # Both are L2-normalized, so dot product == cosine similarity
+   # Both are L2-normalized → dot product == cosine similarity
    ```
-
-7. **Saves similarity scores** to `assets/jd_similarity_scores.csv` (`candidate_id`, `jd_similarity`).
+7. Saves similarity scores to `assets/jd_similarity_scores.csv`.
 
 ---
 
-#### What Gets Embedded — The `build_candidate_text()` Function
+#### What Gets Embedded — `build_candidate_text()`
 
-The function builds a single pipe-delimited (`|`) string per candidate, pulling from every meaningful schema field. Fields are ordered by signal strength to fit within the **512-token context limit** of `bge-small-en-v1.5`:
+A single pipe-delimited (`|`) string per candidate, ordered by signal strength to fit within the **512-token context limit** of `bge-small-en-v1.5`:
 
-| # | Section | Schema Fields Used | Truncation / Notes |
+| # | Section | Schema Fields Used | Notes |
 |---|---|---|---|
 | 1 | **Context line** | `current_title` · `years_of_experience` · `current_industry` | e.g. `"ML Engineer 7 years exp in Internet/Software"` |
-| 2 | **Headline** | `profile.headline` | Full text — typically short |
-| 3 | **Summary** | `profile.summary` | Truncated to **300 chars** to preserve budget for career history |
-| 4 | **Skills** | `skills[].name` | Top **20 skills** sorted descending by `duration_months + endorsements` (strongest skills first) |
-| 5 | **Education** | `education[0].degree` · `field_of_study` | Highest/first degree only |
-| 6 | **Certifications** | `certifications[].name` | Top **3 certifications** |
+| 2 | **Headline** | `profile.headline` | Full text |
+| 3 | **Summary** | `profile.summary` | Truncated to **300 chars** |
+| 4 | **Skills** | `skills[].name` | Top **20 skills** sorted by `duration_months + endorsements` |
+| 5 | **Education** | `education[0].degree` · `field_of_study` | First degree only |
+| 6 | **Certifications** | `certifications[].name` | Top **3** |
 | 7 | **Career role 1** | `career_history[0].title` · `company` · `description` | Description truncated to **200 chars** |
 | 8 | **Career role 2** | `career_history[1].title` · `company` · `description` | Description truncated to **200 chars** |
 | 9 | **Career role 3** | `career_history[2].title` · `company` · `description` | Description truncated to **200 chars** |
 
-> **Why sort skills by `duration_months + endorsements`?** The model's attention window is limited. Placing a candidate's longest-held, most-endorsed skills first ensures the most semantically meaningful signal occupies the highest-priority token positions.
+> Sorting skills by `duration_months + endorsements` ensures the most semantically meaningful signal occupies the highest-priority token positions within the model's attention window.
 
 ---
 
@@ -258,7 +245,7 @@ The function builds a single pipe-delimited (`|`) string per candidate, pulling 
 # From the Raking_engine/ directory:
 
 # Using explicit paths:
-python rank.py --candidates ../data_forensic\ _files/candidates.jsonl --output submission.csv
+python rank.py --candidates assets/candidates.jsonl --output submission.csv
 
 # Using configured defaults:
 python rank.py
@@ -292,36 +279,33 @@ Honeypots in top 100: 0/100 (0%)
 
 The output `submission.csv` is written with exactly **100 data rows**, columns in spec order: `candidate_id, rank, score, reasoning`.
 
-
 ---
 
 ## System Design — Detailed Explanation
 
 ### Stage 1: Disqualification Filters &nbsp;`filters/hard_filters.py`
 
-Before scoring, every candidate passes through a **binary disqualification gate**. Rejected candidates are discarded immediately — no score is computed, keeping the streaming pipeline fast.
+Before scoring, every candidate passes through a **binary disqualification gate**. Rejected candidates are discarded immediately — no score computed, keeping the streaming pipeline fast.
 
 | Rule | Logic | JD Basis |
 |---|---|---|
-| **Honeypot Ban** | `honey_pot_labels` is `suspicious` / `high_risk`, or `honeypot_score >= 3`, or `date_anomaly == True` → reject | ~80 planted honeypots with impossible timelines in the dataset |
+| **Honeypot Ban** | `honey_pot_labels` is `suspicious`/`high_risk`, or `honeypot_score >= 3`, or `date_anomaly == True` → reject | ~80 planted honeypots with impossible timelines |
 | **Junior Floor** | `years_of_experience < 3.0` → reject | JD requires 5–9 yrs; floor at 3 gives buffer for hidden talent |
 | **Non-Engineering Title** | Title contains: *marketing, HR, recruiter, sales, accountant, designer* → reject | JD: *"Marketing Manager is not a fit no matter how perfect their skill list"* |
 | **Wrong AI Domain** | Title contains *computer vision / robotics / speech / hardware* AND summary lacks *nlp / llm / information retrieval* → reject | JD: *"primary expertise is CV or speech without significant NLP/IR exposure"* |
-| **Consulting-Only Career** | 100% of `career_history` at TCS / Infosys / Wipro / Accenture / Cognizant / Capgemini → reject | JD: *"People who have only worked at consulting firms in their entire career"* |
-| **Job Hopper** | `len(career_history) >= 3` AND average tenure `< 18 months` → reject | JD: *"we need someone who plans to be here for 3+ years"* |
-| **Location + Relocation** | Indian candidate not in Pune / Noida / Delhi NCR / Mumbai / Hyderabad AND `willing_to_relocate == False` → reject | JD specifies preferred cities with explicit relocation carve-out |
+| **Consulting-Only Career** | 100% of `career_history` at TCS/Infosys/Wipro/Accenture/Cognizant/Capgemini → reject | JD: *"People who have only worked at consulting firms in their entire career"* |
+| **Job Hopper** | `len(career_history) >= 3` AND avg tenure `< 18 months` → reject | JD: *"we need someone who plans to be here for 3+ years"* |
+| **Location + Relocation** | Indian candidate not in Pune/Noida/Delhi NCR/Mumbai/Hyderabad AND `willing_to_relocate == False` → reject | JD specifies preferred cities with explicit relocation carve-out |
 
 ---
 
 ### Stage 2: Skill Validation Gate &nbsp;`filters/jd_skill_filter.py`
 
-This filter implements the JD's **"hidden talent" philosophy** using a two-pass approach, ensuring we don't over-filter candidates who have real ML experience but lack exact keyword tags:
+Implements the JD's **"hidden talent" philosophy** using a two-pass approach:
 
-**Pass 1 — Skills list match**
-If the candidate's `skills[]` array contains *any* skill from the `JD_CORE_SKILLS` reference set → **passes immediately**.
+**Pass 1 — Skills list match:** If the candidate's `skills[]` array contains *any* skill from `JD_CORE_SKILLS` → **passes immediately**.
 
-**Pass 2 — Full-text ML term search**
-If Pass 1 fails, the filter scans the combined text of `current_title` + `headline` + `summary` + all `career_history[].description` fields for any `ML_CAREER_TERMS`: *recommendation, search, ranking, personalization, matching, retrieval, embed, vector, semantic, collaborative filtering, content-based, similarity* → any match **passes**.
+**Pass 2 — Full-text ML term search:** If Pass 1 fails, scans `current_title` + `headline` + `summary` + all `career_history[].description` fields for any `ML_CAREER_TERMS`: *recommendation, search, ranking, personalization, matching, retrieval, embed, vector, semantic, collaborative filtering, content-based, similarity* → any match **passes**.
 
 This catches candidates who built recommendation engines described in career text but never tagged "RAG" or "Embeddings" in their skills section.
 
@@ -332,6 +316,7 @@ faiss               pinecone             weaviate            qdrant
 milvus              opensearch           langchain           rag
 llamaindex          prompt engineering   hugging face        sentence transformers
 transformers        llms                 nlp                 recommendation systems
+bm25                xgboost              learning-to-rank    fine-tuning / lora / qlora
 ```
 
 ---
@@ -368,8 +353,6 @@ score = (jd_fit    × 0.30)
 ---
 
 #### Component 1: JD Fit Score — 30% &nbsp;`scorers/jd_fit.py`
-
-The highest-weight scoring component. Three sub-signals combine to reward both semantic depth and explicit keyword alignment:
 
 | Sub-Signal | Weight | Source | How It Works |
 |---|---|---|---|
@@ -427,7 +410,7 @@ Measures how much the **recruiting market already wants this candidate**, using 
 | `saved_by_recruiters_30d` | 20 saves | Explicit recruiter shortlisting intent |
 | `applications_submitted_30d` | 10 applications | Active job-seeking behaviour |
 
-**Formula:** `score = mean(v_norm, s_norm, saves_norm, apps_norm)` — average of 4 values normalized to [0, 1].
+**Formula:** `score = mean(v_norm, s_norm, saves_norm, apps_norm)`
 
 ---
 
@@ -463,15 +446,13 @@ Measures **profile legitimacy and professional credibility**:
 
 #### Component 6: Experience Score — 5% &nbsp;`utils/normalize.py`
 
-A **flat-top linear decay** aligned to the JD's stated preferred range of 5–9 years:
-
 | Years of Experience | Score | Rationale |
 |---|---|---|
 | **5 – 9 years** (in-band) | `1.0` | Perfect JD alignment |
 | **< 5 years** (below band) | `years / 5` | Linear ramp — partial credit for near-senior candidates |
 | **> 9 years** (above band) | `1.0 − (years − 9) / 5` | Gentle decay — hits 0.0 at 14+ years |
 
-> Experience carries only 5% weight — aligned with the JD's note: *"we'll seriously consider candidates outside the band if other signals are strong."*
+> Experience carries only 5% weight — aligned with the JD: *"we'll seriously consider candidates outside the band if other signals are strong."*
 
 ---
 
@@ -489,16 +470,16 @@ Peak memory for tracking = **O(K) = O(100)**. Final output: sort the 100-entry h
 
 ### Stage 6: Automated Reasoning Generation &nbsp;`output/reasoning.py`
 
-For each of the final 100 candidates, a **data-grounded reasoning string** is assembled from actual profile fields. No inference, no hallucination — every sentence maps to a real JSON value.
+For each of the final 100 candidates, a **cluster-aware, data-grounded reasoning string** is assembled from actual profile fields. No inference, no hallucination — every sentence maps to a real JSON value.
 
-The 4-step algorithm:
-
-1. **Lead:** `"{current_title} at {current_company} with {N} yrs"` — always from the JSON profile.
-2. **Skills:** Up to 3 skills that exist in both the candidate's `skills[]` and `JD_CORE_SKILLS`. Skills not in the JD set are never mentioned.
-3. **Career highlight:** First sentence from `career_history[].description` containing a retrieval / ranking / search keyword. Falls back to the first sentence of the most recent role description.
-4. **Engagement signal:** `saved_by_recruiters_30d >= 5` → mentions save count; else `recruiter_response_rate > 0.8` → mentions response rate %.
-
-Joined with `". "`, capped at **300 characters**. This satisfies Stage 4's *specific facts*, *no hallucination*, *variation*, and *rank consistency* checks.
+| Stage 4 Check | How This Engine Satisfies It |
+|---|---|
+| **Specific facts** | Lead always includes title, company, YoE, and named JD-matched skills from the profile |
+| **JD connection** | Skills mentioned are cross-checked against `JD_CORE_SKILLS` — irrelevant skills are never cited |
+| **Honest concerns** | Notice period ≥ 90 days, YoE below band, or over-seniority are explicitly flagged |
+| **No hallucination** | Every claim maps to a `profile`, `skills[]`, `career_history[]`, or `redrob_signals` field |
+| **Variation** | 4 rotating structural layouts + 3–7 randomized sentence starters per layout; global project deduplication across the 100-candidate cohort |
+| **Rank consistency** | Cluster differentiator sentences cite the specific signal (saves, notice period, semantic coverage) that broke a tight score tie |
 
 ---
 
@@ -526,10 +507,10 @@ The `submission.csv` file contains exactly **101 lines** (1 header + 100 data ro
 
 ```csv
 candidate_id,rank,score,reasoning
-CAND_0042871,1,0.874521,"ML Engineer at DataScale with 7 yrs. Strong in LLMs, FAISS, Sentence Transformers. Built end-to-end vector retrieval pipeline for e-commerce search. 91% recruiter response rate."
-CAND_0019884,2,0.861203,"Senior AI Engineer at Razorpay with 6 yrs. Strong in Embeddings, RAG, LangChain. Designed hybrid retrieval ranking system. Saved by 12 recruiters."
+CAND_0077337,1,0.876367,"Working as Staff Machine Learning Engineer at Paytm for 7 years. Technical core includes Semantic Search, QLoRA, Pinecone, and BM25. Notably built and shipped a production recommendation system at a marketplace product, going from offline experimentation to live A/B test in 5 months."
+CAND_0081846,2,0.863880,"Currently Lead AI Engineer at Razorpay (6.7 yrs total experience). Strong background across Information Retrieval, LlamaIndex, Elasticsearch, and Vector Search. Past work shows they built a RAG-based ranking pipeline serving 50M+ queries per month."
 ...
-CAND_0007729,100,0.412000,"Data Scientist at NovaTech with 5 yrs. Strong in Machine Learning. Worked on recommendation systems for fintech. Adjacent skills only — lower engagement signals reduce rank."
+CAND_0031842,100,0.678588,"3.5 years experience as AI Specialist at Ola, skilled in LLMs, Vector Search, and Information Retrieval. Total tenure (3.5 yrs) falls under our 5-year benchmark."
 ```
 
 Scores are **monotonically non-increasing** from rank 1 to rank 100. Ties broken deterministically by `candidate_id`.
@@ -548,17 +529,14 @@ docker build -t autorecruit-ranker .
 
 # Run ranking on your dataset
 docker run \
-  -v /absolute/path/to/your/dataset/folder:/data \
+  -v /absolute/path/to/dataset/folder:/data \
   -v /absolute/path/to/assets:/app/assets \
   autorecruit-ranker \
-  python rank.py --candidates /data/your_dataset_name.jsonl --output /data/submission.csv
+  python rank.py --candidates /data/candidates.jsonl --output /data/submission.csv
 ```
 
-**Google Colab Sandbox Demo** (for online end-to-end testing):
+**Google Colab Sandbox Demo:**
 
-A fully reproducible Google Colab sandbox is the recommended way to verify the engine.
-1. Open a new Google Colab notebook.
-2. Run this setup cell to clone the repository and run the engine on a sample:
 ```python
 !git clone https://github.com/Theshmphony7580/autorecruit-
 %cd autorecruit-/Raking_engine
@@ -568,6 +546,7 @@ A fully reproducible Google Colab sandbox is the recommended way to verify the e
 !python -m precompute.embeddings --candidates sample_100.jsonl
 !python rank.py --candidates sample_100.jsonl --output submission.csv
 ```
+
 ---
 
 ## Configuration Reference
@@ -594,9 +573,9 @@ All tunable parameters live in **one file**: `Raking_engine/config/constants.py`
 | `EXPERIENCE_DECAY` | `5` | Years outside band before score reaches 0 |
 | `BEHAVIOR_RESPONSE_TIME_CEILING_HOURS` | `72` | Response time above which behavior score = 0 |
 | `BEHAVIOR_NOTICE_PERIOD_CEILING_DAYS` | `90` | Notice period above which behavior score = 0 |
-| `TRUST_ENDORSEMENTS_MAX` | `50` | Endorsements at which trust score is capped at 1.0 |
+| `TRUST_ENDORSEMENTS_MAX` | `50` | Endorsements at which trust score caps at 1.0 |
 | `TRUST_RECENCY_WINDOW_DAYS` | `365` | Days inactive at which recency component = 0 |
-| `JD_REALISTIC_SKILL_MAXIMUM` | `10` | Denominator for keyword overlap normalization |
+| `JD_REALISTIC_SKILL_MAXIMUM` | `15` | Denominator for keyword overlap normalization |
 
 ---
 
@@ -612,17 +591,17 @@ The embedding model encodes the full career history description text, not just t
 **2. Behavioral down-weighting is mandatory**
 > *"A perfect-on-paper candidate who hasn't logged in for 6 months and has a 5% recruiter response rate is, for hiring purposes, not actually available. Down-weight them appropriately."*
 
-The Behavior Score component (20% weight) uses `open_to_work_flag`, `interview_completion_rate`, `avg_response_time_hours`, and `notice_period_days` to implement this exactly.
+The Behavior Score (20% weight) uses `open_to_work_flag`, `interview_completion_rate`, `avg_response_time_hours`, and `notice_period_days` to implement this exactly.
 
 **3. Keyword stuffers penalized, not banned**
 > *"The right answer is not 'find candidates whose skills section contains the most AI keywords.' That's a trap we've explicitly built into the dataset."*
 
-The stuffer penalty function verifies ML terms in actual career descriptions before penalizing — preserving genuine career transitioners while suppressing pure keyword inflation.
+The stuffer penalty verifies ML terms in actual career descriptions before penalizing — preserving genuine career transitioners while suppressing pure keyword inflation.
 
 **4. Honeypots naturally filtered by scoring**
 > *"We expect a good ranking system to naturally avoid them; you don't need to special-case them."*
 
-We do both: hard-ban via forensic labels (Stage 1A), and the Trust / Bundle scores naturally penalize impossible profiles (e.g. "expert" skill with 0 months experience inflates neither score).
+We do both: hard-ban via forensic labels (Stage 1), and the Trust / Bundle scores naturally penalize impossible profiles.
 
 **5. Consulting-only careers are hard-banned**
 > *"People who have only worked at consulting firms (TCS, Infosys, Wipro, Accenture, Cognizant, Capgemini) in their entire career. We've had bad fit experiences."*
@@ -633,7 +612,8 @@ The consulting-only check verifies the *entire* `career_history` array — a can
 
 ## AI Tools Declaration
 
-AI tools (Claude, Gemini) were used as coding assistants during development. All architecture decisions, scoring weights, filter logic, and JD analysis were performed by the team. The repository reflects genuine engineering iteration — not a single-session LLM dump.
+AI tools (Claude, Gemini) were used as coding assistants during development. All architecture decisions, scoring weights, filter logic, and JD analysis were performed by us 
+The full data analysis was also done before any building by us and in hummanise way not just the passing to the llm and like that proper analysis of dataset (It is a synthetic and not the real dataset ). The repository reflects genuine engineering and logical reasoning not a single-session LLM dump.
 
 ---
 
@@ -644,7 +624,5 @@ See [`submission_metadata.yaml`](./submission_metadata.yaml) for primary contact
 ---
 
 <div align="center">
-<sub>Built for the Redrob Intelligent Candidate Discovery & Ranking Challenge v4 · Team Theshmphony7580</sub>
+<sub>Built for the Intelligent Candidate Discovery & Ranking Challenge · Team RUNIC</sub>
 </div>
----
-
