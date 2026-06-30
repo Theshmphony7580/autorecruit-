@@ -55,6 +55,7 @@ cp your_dataset.jsonl assets/candidates.jsonl
 
 ```bash
 # Takes ~1.5–2 hrs for 100K candidates (requires internet for model download)
+cd .\Raking_engine\
 python -m precompute.embeddings
 ```
 
@@ -70,7 +71,7 @@ Generates:
 python Raking_engine\rank.py 
 
 # Or explicit paths
-python rank.py --candidates assets/candidates.jsonl --output submission.csv
+python Ranking_engine\rank.py --candidates assets/candidates.jsonl --output submission.csv
 ```
 
 **Output:** `submission.csv` (100 rows: `candidate_id, rank, score, reasoning`)
