@@ -75,6 +75,31 @@ python rank.py --candidates assets/candidates.jsonl --output submission.csv
 
 **Output:** `submission.csv` (100 rows: `candidate_id, rank, score, reasoning`)
 
+**Expected terminal output:**
+
+```text
+============================================================
+RANKING ENGINE STARTED
+============================================================
+
+[1/6] Loading pre-computed assets...
+[2/6] Initializing filters and scorers...
+[3/6] Initializing Top-100 tracker...
+[4/6] Processing candidates...
+  Processed 10000, Filtered 8525, In heap 100
+  ...
+[5/6] Generating output...
+[6/6] Writing submission.csv...
+
+Running official validation...
+✓ Official submission validation passed!
+
+============================================================
+RANKING COMPLETED IN 12.97 seconds
+============================================================
+Honeypots in top 100: 0/100 (0%)
+```
+
 ---
 
 ### Verify Setup
@@ -91,6 +116,10 @@ ls assets/candidate_embeddings.npy
 
 # Test run (10 candidates)
 python Raking_engine\rank.py --limit 10
+```
+
+---
+
 The system cleanly separates work into two phases:
 
 | Phase | What It Does | When to Run | Runtime |
@@ -102,7 +131,7 @@ The system cleanly separates work into two phases:
 
 ## Repository Structure
 
-```
+```text
 autorecruit-/
 ├── README.md                         ← You are here
 ├── submission_metadata.yaml          ← Portal metadata (Section 10.2)
@@ -153,7 +182,7 @@ autorecruit-/
 
 ## System Architecture
 
-```
+```text
 candidates.jsonl (100K profiles)
         │
         ▼
@@ -214,30 +243,7 @@ submission.csv  →  candidate_id, rank, score, reasoning
 
 ---
 
-## Quick Start
-
-### Step 1 — Clone & Install
-
-```bash
-git clone https://github.com/Theshmphony7580/autorecruit-
-cd autorecruit-/Raking_engine
-```
-
-```bash
-# Create virtual environment
-python -m venv .venv
-
-# Activate (Windows)
-.venv\Scripts\activate
-
-# Activate (macOS / Linux)
-source .venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-**Dependencies (`requirements.txt`):**
+## Dependencies (`requirements.txt`)
 
 | Package | Min Version | Purpose |
 |---|---|---|
@@ -250,46 +256,14 @@ pip install -r requirements.txt
 
 ---
 
-### Step 2 — Place the Dataset
+## System Design — Detailed Explanation
 
-Place your dataset file inside the `assets/` folder, or pass it explicitly with the `--candidates` flag:
+### Stage 0: Offline Pre-Computation & Embedding Engineering &nbsp;`precompute/embeddings.py`
 
-```
-autorecruit-/Raking_engine/assets/candidates.jsonl
-```
-
----
-
-## Step-by-Step Reproduction
-
-### Pre-Computation — Run Once Before Ranking (Requires Internet for Model Download)
-
-> This step takes ~1.5–2 hours on a CPU for the full 100K dataset (or just seconds/minutes on a smaller sample/GPU). It requires an internet connection on the **very first run** to download the ~130 MB HuggingFace embedding model. Once run, all outputs and model weights are cached to disk locally and reused on every subsequent ranking run. This step is **not** counted in the 5-minute ranking budget.
-
-```bash
-# From the Raking_engine/ directory:
-python -m precompute.embeddings
-```
-
-**What this step does:**
-
-1. Loads `BAAI/bge-small-en-v1.5` (33M parameters, 384-dim, ~130 MB). Downloads from HuggingFace on first run, cached locally thereafter.
-2. Streams `candidates.jsonl` line-by-line and calls `build_candidate_text()` for each profile.
-3. Encodes all 100K candidates into 384-dimensional **L2-normalized** embedding vectors, in batches of 64.
-4. Saves candidate embeddings to `assets/candidate_embeddings.npy` (shape: `[100000, 384]`).
-5. Reads `jd_summary.txt` and encodes it into a single 384-dim L2-normalized vector.
-6. Computes cosine similarity for all 100K candidates via a single vectorized NumPy operation: 
-   ```python
-   similarities = np.dot(candidate_embeddings, jd_embedding)
-   # Both are L2-normalized → dot product == cosine similarity
-   ```
-7. Saves similarity scores to `assets/jd_similarity_scores.csv`.
-
----
+Before the online ranking pipeline runs, candidate profiles and the Job Description are embedded into 384-dimensional $L_2$-normalized vectors using `BAAI/bge-small-en-v1.5`.
 
 #### What Gets Embedded — `build_candidate_text()`
-
-A single pipe-delimited (`|`) string per candidate, ordered by signal strength to fit within the **512-token context limit** of `bge-small-en-v1.5`:
+A single pipe-delimited (`|`) string per candidate, ordered by signal strength to fit within the **512-token context limit**:
 
 | # | Section | Schema Fields Used | Notes |
 |---|---|---|---|
@@ -306,52 +280,6 @@ A single pipe-delimited (`|`) string per candidate, ordered by signal strength t
 > Sorting skills by `duration_months + endorsements` ensures the most semantically meaningful signal occupies the highest-priority token positions within the model's attention window.
 
 ---
-
-### Ranking — The Submission Step
-
-> This is the reproducible step validated in the hackathon sandbox. Must complete within **5 minutes** wall-clock.
-
-```bash
-# From the Raking_engine/ directory:
-
-# Using explicit paths:
-python rank.py --candidates assets/candidates.jsonl --output submission.csv
-
-# Using configured defaults:
-python rank.py
-```
-
-**Expected terminal output:**
-
-```
-============================================================
-RANKING ENGINE STARTED
-============================================================
-
-[1/6] Loading pre-computed assets...
-[2/6] Initializing filters and scorers...
-[3/6] Initializing Top-100 tracker...
-[4/6] Processing candidates...
-  Processed 10000, Filtered 4821, In heap 100
-  Processed 20000, Filtered 9654, In heap 100
-  ...
-[5/6] Generating output...
-[6/6] Writing submission.csv...
-
-Running validation...
-PASS: Format valid: 100 rows, ranks 1-100, scores non-increasing.
-
-============================================================
-RANKING COMPLETED IN 28.4 seconds
-============================================================
-Honeypots in top 100: 0/100 (0%)
-```
-
-The output `submission.csv` is written with exactly **100 data rows**, columns in spec order: `candidate_id, rank, score, reasoning`.
-
----
-
-## System Design — Detailed Explanation
 
 ### Stage 1: Disqualification Filters &nbsp;`filters/hard_filters.py`
 
@@ -689,7 +617,7 @@ The full data analysis was also done before any building by us and in hummanise 
 
 ## Contact
 
-See [`submission_metadata.yaml`](./submission_metadata.yaml) for primary contact details, team member list, and full portal metadata required by Section 10.2 of the submission specification.
+See [`submission_metadata.yaml`](./submission_metadata.yaml) for primary contact details, team member list, and full portal metadata required by the submission specification.
 
 ---
 
