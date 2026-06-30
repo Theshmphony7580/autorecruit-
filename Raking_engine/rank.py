@@ -18,7 +18,7 @@ from scorers.skill_bundle import BundleScorer
 from composite.formula import CompositeScorer
 from output.top_k import TopKTracker
 from output.reasoning import ReasoningGenerator
-from utils.validators import validate_submission
+from utils.validate_submission import validate_submission
 from utils.timing import Timer
 
 def main():
@@ -27,6 +27,7 @@ def main():
     parser.add_argument('--output', default=DEFAULT_OUTPUT_PATH)
     parser.add_argument('--behavior', default=DEFAULT_BEHAVIOR_CSV)
     parser.add_argument('--jd-similarity', default=DEFAULT_JD_SIMILARITY)
+    parser.add_argument('--limit', type=int, default=0, help='Limit number of candidates to process for testing')
     FLAGS = parser.parse_args()
     
     start_time = time.time()
@@ -55,6 +56,8 @@ def main():
     
     with Timer("Candidate Streaming & Scoring"):
         for candidate in stream_candidates(FLAGS.candidates):
+            if FLAGS.limit > 0 and processed >= FLAGS.limit:
+                break
             cid = candidate['candidate_id']
             processed += 1
             
@@ -95,12 +98,25 @@ def main():
             'reasoning': explanations[rank - 1]
         })
         
-    print("\n[6/6] Writing submission.csv...")
+    output_path = FLAGS.output
+    if FLAGS.limit > 0 and output_path == DEFAULT_OUTPUT_PATH:
+        output_path = os.path.join(os.path.dirname(DEFAULT_OUTPUT_PATH), 'test_submission.csv')
+        
+    print(f"\n[6/6] Writing {os.path.basename(output_path)}...")
     result_df = pd.DataFrame(results)
-    result_df.to_csv(FLAGS.output, index=False)
+    result_df.to_csv(output_path, index=False)
     
-    print("\nRunning validation...")
-    validate_submission(result_df, FLAGS.candidates)
+    if FLAGS.limit <= 0 or len(result_df) == 100:
+        print("\nRunning official validation...")
+        errors = validate_submission(output_path)
+        if errors:
+            print(f"❌ Validation failed ({len(errors)} issue(s)):")
+            for e in errors:
+                print(f"  - {e}")
+        else:
+            print("✓ Submission validation passed!")
+    else:
+        print(f"\n Quick test run completed (--limit {FLAGS.limit}). Skipping strict 100-row validation.")
     
     elapsed = time.time() - start_time
     print(f"\n{'=' * 60}")

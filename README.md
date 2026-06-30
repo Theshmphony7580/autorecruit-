@@ -16,12 +16,81 @@
 
 ---
 
-## Overview
+## Quick Start & Code Reproducibility
 
-This repository contains a **production-grade, CPU-only candidate ranking engine** built for an Intelligent Candidate Discovery Hackathon. Given a pool of **100,000 candidate profiles** (JSONL) and a Job Description for a *Senior AI Engineer* role, the engine outputs a ranked CSV of the **top 100 most suitable candidates** — each with a score and a data-grounded reasoning string.
+### Setup
 
-> **Key design constraint:** The full ranking step (after pre-computation) completes in **under 60 seconds** on a 16 GB CPU machine with no GPU and no network access — well within the 5-minute spec limit.
+```bash
+# 1. Clone & enter directory
+git clone https://github.com/Theshmphony7580/autorecruit-
+cd autorecruit-/Raking_engine
 
+# 2. Virtual environment
+python -m venv .venv
+source .venv/bin/activate  # macOS/Linux
+# .venv\Scripts\activate   # Windows
+
+# 3. Install dependencies
+pip install -r requirements.txt
+```
+
+---
+
+### Data
+
+Place your dataset:
+```bash
+cp your_dataset.jsonl assets/candidates.jsonl
+```
+
+**Required fields:** `candidate_id`, `current_title`, `years_of_experience`, `skills[]`, `career_history[]`, `profile.headline`, `profile.summary`, `redrob_signals.*`, `honey_pot_labels`, etc.
+
+**Pre-generated:** `jd_summary.txt` is included in the repo.
+
+---
+
+### Run
+
+#### First Time Only — Generate Embeddings
+
+```bash
+# Takes ~1.5–2 hrs for 100K candidates (requires internet for model download)
+python -m precompute.embeddings
+```
+
+Generates:
+- `assets/candidate_embeddings.npy`
+- `assets/candidate_embeddings_ids.json`
+- `assets/jd_similarity_scores.csv`
+
+#### Every Run — Rank Candidates
+
+```bash
+# Full dataset
+python Raking_engine\rank.py 
+
+# Or explicit paths
+python rank.py --candidates assets/candidates.jsonl --output submission.csv
+```
+
+**Output:** `submission.csv` (100 rows: `candidate_id, rank, score, reasoning`)
+
+---
+
+### Verify Setup
+
+```bash
+# Check dependencies
+python -c "import pandas, numpy, sentence_transformers; print('✓ OK')"
+
+# Check dataset exists
+ls assets/candidates.jsonl
+
+# Check embeddings (post pre-compute)
+ls assets/candidate_embeddings.npy
+
+# Test run (10 candidates)
+python Raking_engine\rank.py --limit 10
 The system cleanly separates work into two phases:
 
 | Phase | What It Does | When to Run | Runtime |
