@@ -36,14 +36,14 @@ reproduce_command: "python Raking_engine/rank.py --candidates ./candidates.jsonl
 # ============================================================================
 compute:
   platform: "Local PC (Windows 11)"                    
-  cpu_cores: 16                                  # Number of CPU cores used
-  ram_gb: 12                                    # Available RAM in GB
-  python_version: "3.13"                      # python --version
-  os: "Windows 11"                              # Or "Ubuntu 22.04 LTS", etc.
-  uses_gpu_for_inference: false                 # Must be false — see compute constraints
-  has_network_during_ranking: false             # Must be false — no API calls during ranking
-  pre_computation_required: true               # true if you pre-compute embeddings or train models offline
-  pre_computation_time_minutes: 120              # Approximate, if applicable
+  cpu_cores: 16                                  
+  ram_gb: 12                                    
+  python_version: "3.13"                      
+  os: "Windows 11"                              
+  uses_gpu_for_inference: false                  
+  has_network_during_ranking: false             
+  pre_computation_required: true               
+  pre_computation_time_minutes: 120            
 
 # ============================================================================
 # AI tools declaration
@@ -68,6 +68,7 @@ ai_usage_summary: |
 # ============================================================================
 methodology_summary: |
   Two-stage CPU-only ranking engine designed for high performance and zero hallucination.
+  
   Phase 1 (Offline Pre-Computation): Embeds candidate profiles and Job Description summaries 
   into 384-dimensional vectors using BAAI/bge-small-en-v1.5. Cosine similarity is computed and 
   saved offline (one-time execution, ~120 mins).
@@ -76,9 +77,15 @@ methodology_summary: |
   Applies 7 strict hard filters (YoE, title restrictions, domain-specific NLP/IR validation, 
   consulting-only penalty, relocation/location match, job-hopper filtering).
 
-  Scoring: Candidates are scored on 6 weighted dimensions: JD Fit (30%), Market Demand (20%), 
-  Search seriousness (20%), co-occurring Skill Bundles (15%), Trust/Credibility (10%), and Experience decay (5%).
+  Scoring: Candidates are scored on 6 weighted dimensions: 
+  JD Fit (30%), Market Demand (20%), 
+  Search seriousness (20%), 
+  co-occurring Skill Bundles (15%), 
+  Trust/Credibility (10%), and 
+  Experience decay (5%).
+  
   Out-of-spec/impostor profiles receive skill-stuffer penalties. Tracks the top 100 via an O(N log 100) Min-Heap.
+  
   Reasoning: Generates deterministic, fact-grounded, non-templated reasoning strings with 
   cohort deduplication to prevent repetitive descriptions.
 
@@ -87,7 +94,7 @@ methodology_summary: |
 # ============================================================================
 declarations:
   read_submission_spec: true        # I have read submission_spec.md in full
-  code_is_original_work: true       # My code is my team's original work (using AI as a tool is fine)
+  code_is_original_work: true       # My code is my team's original work 
   no_collusion: true                # I have not coordinated my submission with other teams
-  honeypot_check_done: true         # explicitly checked for honeypots in your ranking
+  honeypot_check_done: true         # explicitly checked for honeypots in our ranking
   reproduction_tested: true         # I have tested that my reproduce_command runs end-to-end
