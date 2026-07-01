@@ -68,10 +68,10 @@ Generates:
 
 ```bash
 # Full dataset
-python Raking_engine\rank.py 
+python rank.py 
 
 # Or explicit paths
-python Ranking_engine\rank.py --candidates assets/candidates.jsonl --output submission.csv
+python rank.py --candidates assets/candidates.jsonl --output submission.csv
 ```
 
 **Output:** `submission.csv` (100 rows: `candidate_id, rank, score, reasoning`)
@@ -116,7 +116,7 @@ ls assets/candidates.jsonl
 ls assets/candidate_embeddings.npy
 
 # Test run (10 candidates)
-python Raking_engine\rank.py --limit 10
+python rank.py --limit 10
 ```
 
 ---
