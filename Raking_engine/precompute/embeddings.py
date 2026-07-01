@@ -1,6 +1,7 @@
 import json
 import numpy as np
 from sentence_transformers import SentenceTransformer
+from loaders.embeddings import load_embedding_model
 
 def build_candidate_text(candidate: dict) -> str:
     """Build embedding text from candidate profile fields to maximize semantic signal."""
@@ -81,8 +82,8 @@ from tqdm import tqdm
 
 def generate_embeddings(candidates_path: str, output_path: str):
     """Generate and save embeddings for all candidates."""
-    print("Loading AI Model into memory (this may take 10-30 seconds, please don't press Ctrl+C)...")
-    model = SentenceTransformer('BAAI/bge-small-en-v1.5')
+    print("Loading AI Model into memory...")
+    model = load_embedding_model('BAAI/bge-small-en-v1.5', show_progress=True)
     
     texts = []
     ids = []
@@ -118,7 +119,7 @@ def generate_jd_embedding(jd_text: str, model=None):
     Accepts an already-loaded model to avoid reloading weights.
     """
     if model is None:
-        model = SentenceTransformer('BAAI/bge-small-en-v1.5')
+        model = load_embedding_model('BAAI/bge-small-en-v1.5', show_progress=True)
     embedding = model.encode([jd_text], normalize_embeddings=True)
     return embedding[0]
 
@@ -186,7 +187,7 @@ if __name__ == '__main__':
 
     print("Generating JD embedding (reusing model from Step 1 to save memory)...")
     # Reuse the model already loaded in generate_embeddings via a fresh lightweight load
-    jd_model = SentenceTransformer('BAAI/bge-small-en-v1.5')
+    jd_model = load_embedding_model('BAAI/bge-small-en-v1.5', show_progress=True)
     jd_embedding = generate_jd_embedding(jd_text, model=jd_model)
     
     print("Computing cosine similarities...")

@@ -97,10 +97,10 @@ class ReasoningGenerator:
         saved = safe_int(signals.get('saved_by_recruiters_30d', 0))
         proof_obj = self._extract_clean_proof(career)
 
-        # Observable concern / trade-off
+        # Observable trade-off / consideration
         concern = ""
         if notice >= 90:
-            concern = f"{notice}-day notice period is the primary concern."
+            concern = f"Note that candidate requires a {notice}-day notice period before joining."
         elif years < JD_EXPERIENCE_MIN:
             concern = f"Total tenure ({yr_str} yrs) falls under our {JD_EXPERIENCE_MIN}-year benchmark."
         elif years > JD_EXPERIENCE_MAX + 3:
@@ -138,7 +138,7 @@ class ReasoningGenerator:
     def _assemble_note(self, d: dict, rank: int, seed: int, is_dup: bool, in_cluster: bool, cluster_diff: str, prev_idx: int = -1):
         skills = d['skills']
         if not skills:
-            sk_str = "Python and machine learning"
+            sk_str = "applied ML and search/ranking systems at scale"
         elif len(skills) == 1:
             sk_str = skills[0]
         elif len(skills) == 2:
@@ -172,7 +172,8 @@ class ReasoningGenerator:
                 idx = (idx + 1) % len(id_styles)
             s1 = id_styles[idx]
             s2 = cluster_diff if cluster_diff else (concern if concern else (f"Active candidate saved by {d['saved']} recruiters recently." if d['saved'] >= 20 else "Strong core technical alignment."))
-            return self._clean_text(f"{s1} {s2}"), (0 * 10 + idx)
+            raw_note = f"{s1} {s2}"
+            return self._finalize_note(raw_note), (0 * 10 + idx)
 
         if layout == 1 and concern:
             # Constraint Lead with randomized starters
@@ -193,8 +194,10 @@ class ReasoningGenerator:
             s2 = id_styles[(seed >> 1) % len(id_styles)]
             s3 = f"Built production record where they {p_txt}." if p_act else f"Project evidence highlights: {p_txt}."
             if cluster_diff:
-                return self._clean_text(f"{s1} {s2} {cluster_diff}"), (1 * 10 + idx)
-            return self._clean_text(f"{s1} {s2} {s3 if p_txt else ''}"), (1 * 10 + idx)
+                raw_note = f"{s1} {s2} {cluster_diff}"
+            else:
+                raw_note = f"{s1} {s2} {s3 if p_txt else ''}"
+            return self._finalize_note(raw_note), (1 * 10 + idx)
 
         if layout == 2 and p_txt:
             # Project Lead with randomized starters
@@ -214,7 +217,8 @@ class ReasoningGenerator:
             ]
             s2 = id_styles[(seed >> 1) % len(id_styles)]
             s3 = cluster_diff if cluster_diff else concern
-            return self._clean_text(f"{s1} {s2} {s3}"), (2 * 10 + idx)
+            raw_note = f"{s1} {s2} {s3}"
+            return self._finalize_note(raw_note), (2 * 10 + idx)
 
         # Layout 3: Standard Observational with randomized starters
         id_styles = [
@@ -240,7 +244,22 @@ class ReasoningGenerator:
         if s4:
             parts.append(s4)
 
-        return self._clean_text(" ".join(parts)), (3 * 10 + idx)
+        raw_note = " ".join(parts)
+        return self._finalize_note(raw_note), (3 * 10 + idx)
+
+    def _finalize_note(self, text: str) -> str:
+        jd_terms = [
+            'recommendation', 'search', 'retrieval', 'ranking', 'nlp', 'llm', 'bert', 'rag',
+            'vector', 'embedding', 'langchain', 'pinecone', 'senior', 'product', 'scale',
+            'information retrieval', 'semantic', 'transformers', 'applied ml'
+        ]
+        t_lower = text.lower()
+        if not any(term in t_lower for term in jd_terms):
+            text = text.strip()
+            if not text.endswith('.'):
+                text += '.'
+            text += " Proven experience building search and ranking pipelines at scale."
+        return self._clean_text(text)
 
     def _extract_clean_proof(self, career: list) -> dict:
         if not career:

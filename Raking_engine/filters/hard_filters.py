@@ -1,5 +1,6 @@
 import os
 import sys
+import re
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from config.constants import (
@@ -97,7 +98,7 @@ class HardFilter:
         
         # JD trap: "whose title is 'Marketing Manager' is not a fit"
         bad_titles = JD_DISQUALIFIED_TITLES
-        if any(bad in title for bad in bad_titles):
+        if any(re.search(rf'\b{re.escape(bad)}\b', title) for bad in bad_titles):
             return True # Reject: non-engineering title
             
         # JD trap: "primary expertise is computer vision, speech, or robotics without significant NLP/IR"

@@ -15,5 +15,6 @@ class TopKTracker:
             heapq.heapreplace(self.heap, entry)
             
     def get_ranked(self) -> list:
-        # Sort descending to return highest scores first
-        return sorted(self.heap, key=lambda x: x[0], reverse=True)
+        # Sort by score descending (-x[0]), and tie-break by candidate_id ascending (x[1])
+        return sorted(self.heap, key=lambda x: (-x[0], x[1]))
+

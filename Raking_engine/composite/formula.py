@@ -3,6 +3,9 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config.constants import WEIGHTS
 from utils.normalize import normalize_experience
+from scorers.demand import get_demand_score
+from scorers.behavior import get_behavior_score
+from scorers.trust import get_trust_score
 
 class CompositeScorer:
     def __init__(self, behavior_df, jd_sim_df, jd_scorer, bundle_scorer):
@@ -15,9 +18,6 @@ class CompositeScorer:
         jd_fit = self.jd_scorer.compute(candidate, candidate_id, self.jd_sim_df)
         bundle = self.bundle_scorer.compute(candidate)
         
-        from scorers.demand import get_demand_score
-        from scorers.behavior import get_behavior_score
-        from scorers.trust import get_trust_score
         
         demand = get_demand_score(candidate)
         behavior = get_behavior_score(candidate)
